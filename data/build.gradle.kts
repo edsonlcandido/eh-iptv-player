@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.streamvault.data"
+    namespace = "app.ehtudo.data"
     compileSdk = 36
 
     defaultConfig {

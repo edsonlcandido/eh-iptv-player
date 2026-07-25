@@ -30,6 +30,14 @@
     <string name="welcome_feature_player">Unified player overlays, guide access, and saved content</string>
     <string name="welcome_manage_hint">Swap providers, refresh metadata, or add a new source.</string>
 
+    <!-- Simplified onboarding for end users -->
+    <string name="welcome_brand_title">Eh! IPTV</string>
+    <string name="welcome_username_hint">Usuário</string>
+    <string name="welcome_password_hint">Senha</string>
+    <string name="welcome_save">Salvar</string>
+    <string name="welcome_username_required">Digite seu usuário</string>
+    <string name="welcome_password_required">Digite sua senha</string>
+
     
     <string name="home_incorrect_pin">Incorrect PIN</string>
     <string name="home_loading_categories">Loading categories...</string>
