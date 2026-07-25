@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import android.util.Log
 import java.util.logging.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -322,6 +323,12 @@ class ProviderRepositoryImpl @Inject constructor(
                     newData.copy(id = newId).copy(password = "")
                 }
 
+                // Welcome flow: keep the provider inactive until the sync confirms there is
+                // usable catalog data. The sync runs inline so the loading modal stays open
+                // with progress until LIVE → VOD → SERIES → EPG are all done. Navigation to
+                // Home is then triggered by the `_hasProviders` Flow flipping to true when
+                // `handleInitialOnboardingSync` activates the provider.
+                onProgress?.invoke("Sincronizando TV ao vivo e catálogos...")
                 handleInitialOnboardingSync(
                     providerData = providerData,
                     syncResult = syncManager.sync(

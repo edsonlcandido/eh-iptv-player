@@ -737,6 +737,50 @@ class SyncManager @Inject constructor(
         syncStateTracker.reset(providerId)
     }
 
+    /**
+     * Welcome-flow-only path: synchronizes just the LIVE catalog (TV channels) for a
+     * provider, so the user lands on Home with TV ao vivo already populated. VOD,
+     * SERIES and EPG are intentionally NOT synced — those are deferred to background
+     * sync (e.g. when the user opens the Movies tab) or to a manual "Sincronizar" action.
+     *
+     * Returns true if at least one channel was committed, false otherwise.
+     */
+    suspend fun syncLiveOnlyForOnboarding(
+        providerId: Long,
+        onProgress: ((String) -> Unit)? = null
+    ): Boolean = withProviderLock(providerId) lock@{
+        try {
+            val providerEntity = providerDao.getById(providerId)
+                ?: return@lock false
+            val provider = providerEntity
+                .copy(password = credentialCrypto.decryptIfNeeded(providerEntity.password))
+                .toDomain()
+            publishSyncState(providerId, SyncState.Syncing("Sincronizando TV ao vivo..."))
+            val outcome = syncLiveOnly(
+                provider = provider,
+                syncReason = XtreamLiveSyncReason.INITIAL_ONBOARDING,
+                onProgress = onProgress
+            )
+            providerDao.updateSyncTime(providerId, System.currentTimeMillis())
+            val committedChannels = channelDao.getCount(providerId).first()
+            val accepted = committedChannels > 0
+            publishSyncState(providerId, if (accepted) {
+                SyncState.Success()
+            } else {
+                SyncState.Partial("Sincronização de TV ao vivo não retornou canais", outcome.warnings)
+            })
+            accepted
+        } catch (e: CancellationException) {
+            resetState(providerId)
+            throw e
+        } catch (e: Exception) {
+            publishSyncState(providerId, SyncState.Error(syncErrorSanitizer.userMessage(e, "Live TV sync failed"), e))
+            false
+        } finally {
+            syncProgressBus.reset()
+        }
+    }
+
     suspend fun rebuildXtreamIndex(
         providerId: Long,
         onProgress: ((String) -> Unit)? = null
