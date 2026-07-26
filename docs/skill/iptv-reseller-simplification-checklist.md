@@ -61,6 +61,27 @@ After applying the simplification skills, the following must be true. **Any devi
 - [ ] The function returns `Result.success(providerData)` immediately after the background dispatch.
 - [ ] `handleInitialOnboardingSync` is still defined and still called from `loginM3u`, `loginJellyfin`, `loginStalker` (those paths are unchanged).
 
+### Brand defaults baked into the build (Eh! IPTV reseller profile)
+
+These five defaults apply on a **fresh install** (DataStore never written, no per-user override). They make the app feel like a single-purpose IPTV client instead of a general StreamVault. Single source of truth is either an Elvis in `data/.../PreferencesRepository.kt` or a `fromStorage(value: String?): …` fallback in `domain/.../model/*.kt`. End-user can still override these in Settings — they only kick in when the user has never set them.
+
+- [ ] **Top-nav tabs** = `[SEARCH, LIVE_TV, MOVIES, SERIES, SETTINGS]`. The `HOME`, `DOWNLOADS`, `GUIDE`, and `PLUGINS` tabs are **never shown** by default. (`SETTINGS` is `isRequired` so it auto-injects.) Source: `domain/src/main/java/app/ehtudo/domain/model/AppTopLevelDestination.kt:19-29` → `AppTopLevelDestination.defaultOrder`. Consumed by `decodeAppTopLevelDestinations()` in `PreferencesRepository.kt:2088` as the `null/empty → default` branch.
+- [ ] **Landing tab on launch** = `LIVE_TV`. Source: `domain/src/main/java/app/ehtudo/domain/model/AppLandingDestination.kt:16-17` → `fromStorage(... ) ?: LIVE_TV`. Initial UI placeholder for `SettingsUiState.appLandingDestination = AppLandingDestination.LIVE_TV` at `SettingsUiStateModel.kt:72` and `SettingsStateBindings.kt:48`.
+- [ ] **`liveTvChannelMode`** = `PRO`. Source: `data/src/main/java/app/ehtudo/data/preferences/PreferencesRepository.kt` → `Flow { preferences[PreferencesKeys.LIVE_TV_CHANNEL_MODE] ?: "PRO" }`. Consumer `LiveTvChannelMode.fromStorage(... ) ?: PRO` in `app/.../ui/model/LiveTvChannelMode.kt:9-10` (defense in depth).
+- [ ] **`liveTvQuickFilterVisibility`** = `HIDE` (no "Filtros rápidos" panel on the Live TV sidebar). Source: Elvis in `PreferencesRepository.kt` returning `"hide"` when unset. Consumer fallback in `app/.../ui/model/LiveTvQuickFilterVisibilityMode.kt:9-11`. Initial UI placeholder `SettingsStateBindings.kt:99`.
+- [ ] **Initial selected category on Live TV** = `All Channels` (id `ChannelRepository.ALL_CHANNELS_ID = -1_000_000L`). Source: `app/.../ui/screens/home/HomeViewModel.kt:548-557` → `(defaultId ?: ChannelRepository.ALL_CHANNELS_ID).let { categories.find { it.id == it } }`. This only fires when `currentSelected` is `null` (fresh install + no provider). The user's last visit (`lastLiveCategoryId`) is honored on subsequent launches.
+
+Verification snippet for these five:
+
+```bash
+adb -s d1d1b8f3 shell pm clear app.ehtudo.iptv.debug
+# (re-auth) … → expect top-bar shows 5 tabs (no HOME/DOWNLOADS/GUIDE/PLUGINS),
+#             expect the app lands directly on TV ao vivo,
+#             expect category sidebar has no "Filtros rápidos" header,
+#             expect "All Channels (2737)" selected on first paint,
+#             expect channel rows in PRO density.
+```
+
 ### Strings (`strings.xml`)
 
 - [ ] `welcome_brand_title` = "Eh! IPTV"
@@ -117,6 +138,16 @@ adb -s d1d1b8f3 shell input keyevent KEYCODE_DPAD_CENTER
 sleep 2
 adb -s d1d1b8f3 exec-out screencap -p > /tmp/livetv.png
 # Expect: "All Channels 2737" or similar.
+
+# 10. Verify the 5 brand defaults (Brand-defaults section above)
+# 10a. Top-nav has 5 tabs and no HOME/DOWNLOADS/GUIDE/PLUGINS
+adb -s d1d1b8f3 exec-out screencap -p > /tmp/topnav.png
+# Expect the top-bar to show only: TV ao vivo | Filmes | Série | Pesquisar | Configurações.
+# 10b. Default landing is LIVE_TV (no Home tab focused, "TV ao vivo" pill is highlighted)
+# 10c. liveTvChannelMode == PRO (channel rows are dense, big-thumbnail layout)
+# 10d. liveTvQuickFilterVisibility == HIDE (categories sidebar does NOT show
+#     the "Filtros rápidos — Mostrar" header)
+# 10e. Initial selected Live TV category is "All Channels" with channels loaded.
 ```
 
 ## Phase 3 — Known regression patterns to look for

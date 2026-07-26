@@ -69,7 +69,7 @@ data class SettingsUiState(
     val parentalControlLevel: Int = 0,
     val hasParentalPin: Boolean = false,
     val appLanguage: String = "system",
-    val appLandingDestination: AppLandingDestination = AppLandingDestination.HOME,
+    val appLandingDestination: AppLandingDestination = AppLandingDestination.LIVE_TV,
     val appTopLevelDestinations: List<AppTopLevelDestination> = AppTopLevelDestination.defaultOrder,
     val appHomeDashboardShelves: List<AppHomeDashboardShelf> = AppHomeDashboardShelf.defaultOrder,
     val appTimeFormat: AppTimeFormat = AppTimeFormat.SYSTEM,

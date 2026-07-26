@@ -546,7 +546,8 @@ class HomeViewModel @Inject constructor(
                     }
 
                     if (currentSelected == null && categories.isNotEmpty()) {
-                        val defaultCat = defaultId?.let { id -> categories.find { it.id == id } }
+                        val defaultCat = (defaultId ?: ChannelRepository.ALL_CHANNELS_ID)
+                            .let { id -> categories.find { it.id == id } }
                         val favoritesCat = categories.find { it.id == VirtualCategoryIds.FAVORITES }
 
                         if (defaultCat != null) {
@@ -2015,7 +2016,7 @@ data class HomeUiState(
     val categorySearchQuery: String = "",
     val savedCategoryFilters: List<String> = emptyList(),
     val activeCategoryFilter: String? = null,
-    val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE,
+    val liveTvQuickFilterVisibilityMode: LiveTvQuickFilterVisibilityMode = LiveTvQuickFilterVisibilityMode.HIDE,
     val channelSearchQuery: String = "",
     val showDialog: Boolean = false,
     val selectedChannelForDialog: Channel? = null,

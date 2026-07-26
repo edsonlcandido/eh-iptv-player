@@ -14,6 +14,6 @@ enum class AppLandingDestination(val storageValue: String) {
 
     companion object {
         fun fromStorage(value: String?): AppLandingDestination =
-            entries.firstOrNull { it.storageValue.equals(value, ignoreCase = true) } ?: HOME
+            entries.firstOrNull { it.storageValue.equals(value, ignoreCase = true) } ?: LIVE_TV
     }
 }

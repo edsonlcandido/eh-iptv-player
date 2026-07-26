@@ -1394,7 +1394,7 @@ class PreferencesRepository @Inject constructor(
     }
 
     val liveTvChannelMode: Flow<String?> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LIVE_TV_CHANNEL_MODE]
+        preferences[PreferencesKeys.LIVE_TV_CHANNEL_MODE] ?: "COMFORTABLE"
     }
 
     suspend fun setLiveTvChannelMode(mode: String) {
@@ -1444,7 +1444,7 @@ class PreferencesRepository @Inject constructor(
     }
 
     val liveTvQuickFilterVisibility: Flow<String?> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LIVE_TV_QUICK_FILTER_VISIBILITY]
+        preferences[PreferencesKeys.LIVE_TV_QUICK_FILTER_VISIBILITY] ?: "hide"
     }
 
     suspend fun setLiveTvQuickFilterVisibility(mode: String) {
