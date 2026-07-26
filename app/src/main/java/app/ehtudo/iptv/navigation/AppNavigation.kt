@@ -462,7 +462,12 @@ fun AppNavigation(mainActivity: MainActivity) {
         composable(Routes.WELCOME) {
             WelcomeScreen(
                 onNavigateToHome = dropUnlessResumed {
-                    navigateToStartupTarget(Routes.WELCOME)
+                    // Welcome always lands on TV ao vivo with "All Channels" preselected.
+                    val allChannelsId = app.ehtudo.domain.repository.ChannelRepository.ALL_CHANNELS_ID
+                    navController.navigate(Routes.liveTv(allChannelsId)) {
+                        popUpTo(Routes.WELCOME) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 },
                 startupReady = startupRoute != null,
                 onNavigateToSetup = dropUnlessResumed {

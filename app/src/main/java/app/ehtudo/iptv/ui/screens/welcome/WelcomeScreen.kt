@@ -219,11 +219,10 @@ fun WelcomeScreen(
     val username by viewModel.username.collectAsStateWithLifecycle()
     val password by viewModel.password.collectAsStateWithLifecycle()
 
-    LaunchedEffect(hasProviders, startupReady) {
-        when (hasProviders) {
-            true -> if (startupReady) onNavigateToHome()
-            false -> Unit
-            null -> Unit
+    LaunchedEffect(hasProviders, isLoading, startupReady) {
+        when {
+            hasProviders == true && !isLoading && startupReady -> onNavigateToHome()
+            else -> Unit
         }
     }
 

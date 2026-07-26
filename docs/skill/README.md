@@ -28,6 +28,8 @@ The user must **only see**:
 | 5 | [package-rename-streamvault-to-ehtudo.md](./package-rename-streamvault-to-ehtudo.md) | Mechanical rename of `com.streamvault.*` → `app.ehtudo.iptv` (single source-of-truth namespace) |
 | 6 | [iptv-reseller-simplification-checklist.md](./iptv-reseller-simplification-checklist.md) | Master checklist to apply all simplifications in order without regressions |
 | 7 | [testing-on-xiaomi-miui-device.md](./testing-on-xiaomi-miui-device.md) | How to sideload and test on the Xiaomi POCO M2012K11AG with the MIUI "Install via USB" gate |
+| 8 | [configure-top-navigation-via-settings.md](./configure-top-navigation-via-settings.md) | How to hide / reorder / pin top-menu tabs (Downloads, Plugins, Home) — uses the existing **Settings → Navegação superior** dialog, never hardcode `defaultOrder` |
+| 9 | [all-customisation-surfaces-and-defaults.md](./all-customisation-surfaces-and-defaults.md) | Complete reference of every compile-time constant, every DataStore preference with its default, and every Settings UI section — answers "can the user change X?" and "what is the default for Y?" without re-reading the source |
 
 ## Project facts
 
