@@ -454,9 +454,16 @@ private fun WelcomeStartCard(
 
             TvButton(
                 onClick = onSave,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.colors(
+                    containerColor = AppColors.BrandStrong,
+                    contentColor = Color.White
+                )
             ) {
-                Text(text = stringResource(R.string.welcome_save))
+                Text(
+                    text = stringResource(R.string.welcome_save),
+                    color = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.height(2.dp))

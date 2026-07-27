@@ -84,6 +84,9 @@ import app.ehtudo.domain.usecase.GetCustomCategories
 import app.ehtudo.domain.usecase.SyncProvider
 import app.ehtudo.domain.usecase.SyncProviderCommand
 import app.ehtudo.domain.usecase.SyncProviderResult
+import app.ehtudo.domain.usecase.ValidateAndAddProvider
+import app.ehtudo.domain.usecase.ValidateAndAddProviderResult
+import app.ehtudo.domain.usecase.XtreamProviderSetupCommand
 import app.ehtudo.player.AudioCompatibilityMemoryStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,6 +96,8 @@ import kotlin.math.max
 import javax.inject.Inject
 
 private const val BACKGROUND_INDEX_STATUS_PREFIX = "Background index:"
+private const val QUICK_XTREAM_URL = "http://dnstv.top/"
+private const val QUICK_XTREAM_PROVIDER_NAME = "Eh! IPTV"
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -124,6 +129,7 @@ class SettingsViewModel @Inject constructor(
     private val gitHubReleaseChecker: GitHubReleaseChecker,
     private val appUpdateInstaller: AppUpdateInstaller,
     private val getCustomCategories: GetCustomCategories,
+    private val validateAndAddProvider: ValidateAndAddProvider,
     private val audioCompatibilityMemoryStore: AudioCompatibilityMemoryStore
 ) : ViewModel() {
     private val appContext = application
@@ -242,6 +248,52 @@ class SettingsViewModel @Inject constructor(
             uiState = _uiState
         )
         driveBackupActions.observeAuthState(viewModelScope)
+    }
+
+    fun setQuickXtreamUsername(value: String) {
+        _uiState.update { it.copy(quickXtreamUsername = value, quickXtreamError = null) }
+    }
+
+    fun setQuickXtreamPassword(value: String) {
+        _uiState.update { it.copy(quickXtreamPassword = value, quickXtreamError = null) }
+    }
+
+    fun addQuickXtreamProvider() {
+        val username = _uiState.value.quickXtreamUsername.trim()
+        val password = _uiState.value.quickXtreamPassword
+        val validationError = when {
+            username.isBlank() -> appContext.getString(R.string.welcome_username_required)
+            password.isBlank() -> appContext.getString(R.string.welcome_password_required)
+            else -> null
+        }
+        if (validationError != null) {
+            _uiState.update { it.copy(quickXtreamError = validationError) }
+            return
+        }
+
+        _uiState.update { it.copy(isAddingQuickXtream = true, quickXtreamError = null) }
+        viewModelScope.launch {
+            val result = validateAndAddProvider.loginXtream(
+                XtreamProviderSetupCommand(
+                    serverUrl = QUICK_XTREAM_URL,
+                    username = username,
+                    password = password,
+                    name = QUICK_XTREAM_PROVIDER_NAME,
+                    xtreamFastSyncEnabled = true
+                )
+            )
+            _uiState.update { state ->
+                state.copy(
+                    isAddingQuickXtream = false,
+                    quickXtreamError = when (result) {
+                        is ValidateAndAddProviderResult.Success -> null
+                        is ValidateAndAddProviderResult.SavedWithWarning -> null
+                        is ValidateAndAddProviderResult.ValidationError -> result.message
+                        is ValidateAndAddProviderResult.Error -> result.message
+                    }
+                )
+            }
+        }
     }
 
     fun refreshCrashReport() {

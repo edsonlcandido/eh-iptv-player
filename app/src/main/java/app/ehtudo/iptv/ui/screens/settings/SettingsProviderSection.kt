@@ -1,40 +1,49 @@
 package app.ehtudo.iptv.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text as MaterialText
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.compose.ui.unit.sp
+import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Surface
+import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import app.ehtudo.iptv.R
-import app.ehtudo.iptv.ui.components.TvEmptyState
-import app.ehtudo.iptv.ui.interaction.TvClickableSurface
+import app.ehtudo.iptv.ui.design.AppColors
+import app.ehtudo.iptv.ui.interaction.TvButton
 import app.ehtudo.iptv.ui.theme.OnSurfaceDim
-import app.ehtudo.iptv.ui.theme.Primary
 import app.ehtudo.domain.model.Provider
 import app.ehtudo.domain.model.ProviderType
 
 internal fun LazyListScope.providerSection(
     uiState: SettingsUiState,
-    onAddProvider: () -> Unit,
     onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     viewModel: SettingsViewModel,
@@ -42,12 +51,14 @@ internal fun LazyListScope.providerSection(
 ) {
     if (uiState.providers.isEmpty()) {
         item {
-            TvEmptyState(
-                title = stringResource(R.string.settings_no_providers),
-                subtitle = stringResource(R.string.settings_no_providers_subtitle),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 8.dp)
+            QuickXtreamProviderCard(
+                username = uiState.quickXtreamUsername,
+                password = uiState.quickXtreamPassword,
+                isLoading = uiState.isAddingQuickXtream,
+                error = uiState.quickXtreamError,
+                onUsernameChange = viewModel::setQuickXtreamUsername,
+                onPasswordChange = viewModel::setQuickXtreamPassword,
+                onSave = viewModel::addQuickXtreamProvider
             )
         }
     } else {
@@ -117,67 +128,119 @@ internal fun LazyListScope.providerSection(
                     viewModel.refreshProviderClassification(selectedProvider.id)
                 }
             )
-
-            Spacer(modifier = Modifier.height(18.dp))
-            CombinedM3uProfilesCard(
-                profiles = uiState.combinedProfiles,
-                availableProviders = uiState.availableM3uProviders,
-                selectedProfileId = providerState.selectedCombinedProfileId,
-                activeLiveSource = uiState.activeLiveSource,
-                onSelectProfile = { providerState.selectedCombinedProfileId = it },
-                onCreateProfile = { providerState.showCreateCombinedDialog = true },
-                onActivateProfile = { profileId -> viewModel.setActiveCombinedProfile(profileId) },
-                onDeleteProfile = { profileId ->
-                    if (providerState.selectedCombinedProfileId == profileId) {
-                        providerState.selectedCombinedProfileId = null
-                    }
-                    viewModel.deleteCombinedProfile(profileId)
-                },
-                onRenameProfile = { profileId ->
-                    providerState.selectedCombinedProfileId = profileId
-                    providerState.showRenameCombinedDialog = true
-                },
-                onAddProvider = { profileId ->
-                    providerState.selectedCombinedProfileId = profileId
-                    providerState.showAddCombinedMemberDialog = true
-                },
-                onRemoveProvider = { profileId, providerId ->
-                    viewModel.removeProviderFromCombinedProfile(profileId, providerId)
-                },
-                onToggleProviderEnabled = { profileId, providerId, enabled ->
-                    viewModel.setCombinedProviderEnabled(profileId, providerId, enabled)
-                },
-                onMoveProvider = { profileId, providerId, moveUp ->
-                    viewModel.moveCombinedProvider(profileId, providerId, moveUp)
-                }
-            )
         }
     }
+}
 
-    item {
-        TvClickableSurface(
-            onClick = onAddProvider,
-            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
-            colors = ClickableSurfaceDefaults.colors(
-                containerColor = Primary.copy(alpha = 0.15f),
-                focusedContainerColor = Primary.copy(alpha = 0.3f)
-            ),
-            scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
-            modifier = Modifier.fillMaxWidth()
+@Composable
+private fun QuickXtreamProviderCard(
+    username: String,
+    password: String,
+    isLoading: Boolean,
+    error: String?,
+    onUsernameChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSave: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .widthIn(max = 480.dp)
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        colors = SurfaceDefaults.colors(containerColor = AppColors.Surface.copy(alpha = 0.95f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            MaterialText(
+                text = stringResource(R.string.welcome_brand_title),
+                style = MaterialTheme.typography.headlineMedium,
+                color = AppColors.TextPrimary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            MaterialText(
+                text = stringResource(R.string.welcome_subtitle),
+                style = MaterialTheme.typography.bodyLarge,
+                color = AppColors.TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = username,
+                onValueChange = onUsernameChange,
+                enabled = !isLoading,
+                placeholder = { MaterialText(stringResource(R.string.welcome_username_hint)) },
+                singleLine = true,
+                textStyle = TextStyle(fontSize = 18.sp, color = AppColors.TextPrimary),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                colors = quickXtreamTextFieldColors(),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                enabled = !isLoading,
+                placeholder = { MaterialText(stringResource(R.string.welcome_password_hint)) },
+                singleLine = true,
+                textStyle = TextStyle(fontSize = 18.sp, color = AppColors.TextPrimary),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done
+                ),
+                colors = quickXtreamTextFieldColors(),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (error != null) {
+                MaterialText(
+                    text = error,
+                    color = AppColors.Live,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            TvButton(
+                onClick = onSave,
+                enabled = !isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.colors(
+                    containerColor = AppColors.BrandStrong,
+                    contentColor = Color.White
+                )
             ) {
-                Text(
-                    text = stringResource(R.string.settings_add_provider),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Primary
+                MaterialText(
+                    text = if (isLoading) {
+                        stringResource(R.string.welcome_loading_title)
+                    } else {
+                        stringResource(R.string.welcome_save)
+                    },
+                    color = Color.White
                 )
             }
         }
     }
 }
+
+@Composable
+private fun quickXtreamTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = AppColors.Brand,
+    unfocusedBorderColor = AppColors.Outline,
+    focusedTextColor = AppColors.TextPrimary,
+    unfocusedTextColor = AppColors.TextPrimary,
+    focusedPlaceholderColor = AppColors.TextTertiary,
+    unfocusedPlaceholderColor = AppColors.TextTertiary,
+    cursorColor = AppColors.Brand
+)

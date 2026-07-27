@@ -19,7 +19,6 @@ internal fun SettingsContentPane(
     screenLabels: SettingsScreenLabels,
     dialogState: SettingsScreenDialogState,
     providerState: SettingsProviderSectionState,
-    onAddProvider: () -> Unit,
     onEditProvider: (Provider) -> Unit,
     onNavigateToParentalControl: (Long) -> Unit,
     onChooseRecordingFolder: () -> Unit,
@@ -50,7 +49,6 @@ internal fun SettingsContentPane(
         if (dialogState.selectedCategory == 0) {
             providerSection(
                 uiState = uiState,
-                onAddProvider = onAddProvider,
                 onEditProvider = onEditProvider,
                 onNavigateToParentalControl = onNavigateToParentalControl,
                 viewModel = viewModel,

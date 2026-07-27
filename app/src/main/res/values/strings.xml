@@ -333,7 +333,7 @@
 
     
     <string name="settings_title">Settings</string>
-    <string name="settings_providers">Providers</string>
+    <string name="settings_providers">Eh!IPTV</string>
     <string name="settings_no_providers">No providers configured</string>
     <string name="settings_add_provider">Add Provider</string>
     <string name="settings_providers_subtitle">Switch, sync, edit, and troubleshoot your IPTV sources.</string>

@@ -49,6 +49,10 @@ data class CrashReportUiModel(
 
 data class SettingsUiState(
     val providers: List<Provider> = emptyList(),
+    val quickXtreamUsername: String = "",
+    val quickXtreamPassword: String = "",
+    val isAddingQuickXtream: Boolean = false,
+    val quickXtreamError: String? = null,
     val combinedProfiles: List<CombinedM3uProfile> = emptyList(),
     val availableM3uProviders: List<Provider> = emptyList(),
     val activeProviderId: Long? = null,

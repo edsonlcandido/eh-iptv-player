@@ -292,7 +292,6 @@ fun SettingsScreen(
                     screenLabels = screenLabels,
                     dialogState = dialogState,
                     providerState = providerState,
-                    onAddProvider = onAddProvider,
                     onEditProvider = onEditProvider,
                     onNavigateToParentalControl = onNavigateToParentalControl,
                     onChooseRecordingFolder = {
