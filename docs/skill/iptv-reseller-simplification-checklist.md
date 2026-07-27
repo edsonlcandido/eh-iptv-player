@@ -1,181 +1,241 @@
-# Skill 6 — IPTV reseller simplification checklist
+# Roteiro — simplificação do StreamVault para Eh!IPTV
 
-## Goal
+## Objetivo
 
-Apply every "make the reseller app simple" change in the right order, with the right verification at each step. Used at the start of a new agent session to recover the current state and decide what's still pending.
+Usar este documento como checklist repetível para transformar uma nova cópia do projeto base **StreamVault** em uma build simplificada de revenda chamada **Eh!IPTV**. Execute as fases na ordem, confirme cada item e só marque a fase como concluída após a verificação correspondente.
 
-## When to use this skill
+Este roteiro consolida as alterações implementadas até o commit atual (branch `ehiptv/custom-and-simplify`), com Reprodução enxuto e categorias ocultas. A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
 
-- At the **start of any new agent session** that touches the welcome, provider-setup, or activation flow.
-- After pulling a new branch — confirm the work matches the contract below.
-- Before declaring "done" on a customisation pass.
+## Quando usar
 
-## Phase 0 — Snapshot the current state
+- Ao iniciar a customização de uma nova versão/clone do StreamVault.
+- Ao reaplicar a personalização depois de atualizar o projeto base.
+- Ao revisar uma build antes de entregar o APK ao revendedor.
+
+## Fase 0 — Preparar o projeto base
+
+1. Crie uma branch de customização a partir do StreamVault:
 
 ```bash
-# Confirm the active branch and what is uncommitted
+git switch -c ehiptv/custom-and-simplify
+```
+
+2. Confirme o estado inicial e os commits aplicados:
+
+```bash
 git status --short
 git log --oneline -10
+```
 
-# Confirm the installed package on the Xiaomi
-adb -s d1d1b8f3 shell pm list packages | grep ehtudo
-# Expected: package:app.ehtudo.iptv.debug
+3. Leia `AGENTS.md`, `README.md` e este roteiro antes de editar.
+4. Preserve credenciais fora do Git. Use `local.properties` somente para dados de desenvolvimento.
+5. Depois de renomear pacotes, limpe os caches KSP:
 
-# Dump the current provider row
+```bash
+rm -rf app/build/kspCaches data/build/kspCaches player/build/kspCaches domain/build/kspCaches
+```
+
+## Fase 1 — Identidade e pacote
+
+- [ ] Pacote da aplicação = `app.ehtudo.iptv`.
+- [ ] Build debug adiciona o sufixo `.debug`.
+- [ ] Marca exibida ao usuário = `Eh! IPTV` ou `Eh!IPTV`, conforme o contexto visual.
+- [ ] Título do app e ícones foram atualizados sem alterar o contrato de módulos.
+- [ ] O nome do projeto Gradle pode continuar `StreamVault`; ele não precisa ser renomeado para funcionar.
+- [ ] Confirme `applicationId` e `versionName` em `app/build.gradle.kts`.
+
+## Fase 2 — Welcome simplificado
+
+Arquivos principais: `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt` e `app/src/main/res/values/strings.xml`.
+
+- [ ] Título = `R.string.welcome_brand_title` (`Eh! IPTV`).
+- [ ] A tela inicial mostra somente dois campos: usuário e senha.
+- [ ] Os dois campos são texto simples: sem `PasswordVisualTransformation`, ícone de olho ou `KeyboardType.Password`.
+- [ ] O usuário e a senha são validados antes da chamada de login.
+- [ ] O botão usa `R.string.welcome_save` (`Salvar`).
+- [ ] O botão Salvar usa fundo azul-claro (`AppColors.BrandStrong`) e texto branco.
+- [ ] O login constrói `XtreamProviderSetupCommand` com:
+  - `serverUrl = "http://dnstv.top/"`;
+  - `name = "Eh! IPTV"`;
+  - `xtreamFastSyncEnabled = true`.
+- [ ] O login não bloqueia a entrada aguardando a sincronização completa.
+- [ ] A sincronização posterior ocorre em background.
+
+## Fase 3 — Provider Setup avançado
+
+Arquivo principal: `app/src/main/java/app/ehtudo/iptv/ui/screens/provider/ProviderSetupScreen.kt`.
+
+- [ ] O fluxo Xtream simplificado pede apenas usuário e senha.
+- [ ] A URL Xtream padrão e o nome padrão são aplicados automaticamente.
+- [ ] Não há campo de servidor, nome de playlist ou opções avançadas no fluxo simplificado.
+- [ ] M3U, Stalker e Jellyfin continuam acessíveis pelo setup avançado.
+- [ ] O fluxo avançado não perde os campos específicos de cada tipo.
+
+## Fase 4 — Configurações > Eh!IPTV
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsNavigationRail.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsProviderSection.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsViewModel.kt`
+- `app/src/main/res/values/strings.xml`
+
+- [ ] A categoria lateral que antes era `Providers/Provedores` exibe `Eh!IPTV` através de `R.string.settings_providers`.
+- [ ] Quando já existem provedores, a tela mostra a seleção e o card de gerenciamento do provedor.
+- [ ] A seção `Combined M3U` não é exibida nessa tela.
+- [ ] O botão `Adicionar provedor` não é exibido nessa tela.
+- [ ] Quando não existe nenhum provedor, a tela mostra inline:
+  - campo de usuário;
+  - campo de senha em texto simples;
+  - botão `Salvar`;
+  - mensagem de erro de validação ou autenticação.
+- [ ] O formulário vazio usa o mesmo URL Xtream fixo `http://dnstv.top/` e nome padrão `Eh! IPTV` do Welcome.
+- [ ] O botão Salvar do formulário de provedores usa fundo azul-claro (`AppColors.BrandStrong`) e texto branco.
+- [ ] O formulário fica desabilitado durante a criação/sincronização inicial.
+- [ ] Editar, excluir, conectar, atualizar e controle parental continuam disponíveis para provedores existentes.
+
+## Fase 4b — Reprodução enxuta
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsPlaybackSection.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsContentPane.kt`
+- `app/src/main/res/values/strings.xml`
+
+- [ ] A categoria **Reprodução/Playback** do rail só exibe duas coisas: a linha `Live stream format` e o card de teste de velocidade (`InternetSpeedTestCard`).
+- [ ] Nenhum toggle extra de decoder, timeshift, legendas, buffer, qualidade de rede, modo zap, compatibilidade, sincronização, Multiview ou sessão multimídia é renderizado.
+- [ ] A linha `Live stream format` continua abrindo o diálogo `PremiumSelectionDialog` com `AUTO`, `HLS` e `MPEG_TS`, persistindo em `viewModel.setPlayerLiveStreamFormatMode(...)`.
+- [ ] O card de teste de velocidade continua mostrando o último resultado, o botão **Rodar teste**, e os botões **Aplicar ao Wi-Fi** e **Aplicar ao cabo**, chamando `viewModel::runInternetSpeedTest`, `viewModel::applySpeedTestRecommendationToWifi` e `viewModel::applySpeedTestRecommendationToEthernet`.
+- [ ] A assinatura de `settingsPlaybackSection(...)` foi enxugada para apenas `uiState`, `viewModel`, `lastSpeedTestLabel`, `lastSpeedTestSummary` e `speedTestRecommendationLabel`. Os demais labels e callbacks de diálogo podem ser removidos do call-site em `SettingsContentPane`.
+- [ ] A string `settings_live_stream_format` existe em `values/strings.xml` e substitui o rótulo literal que existia dentro da seção.
+
+## Fase 4c — Categorias ocultas no rail
+
+Arquivo principal: `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsNavigationRail.kt`.
+
+- [ ] O rail lateral de Configurações mostra apenas as quatro categorias: `Eh!IPTV`, `Reprodução/Playback`, `Privacidade/Privacy` e `Sobre/About`.
+- [ ] As categorias a seguir não são renderizadas em nenhum estado:
+  - Navegação/Browsing.
+  - Gravação/Recording.
+  - Backup & Restore.
+  - EPG Sources.
+- [ ] O switch do `LazyColumn` em `SettingsContentPane.kt` consome apenas os índices `0..3`; ramos para índices maiores são removidos.
+- [ ] `SettingsScreen.kt` não força mais `dialogState.selectedCategory = 5` no caminho de import inicial; a inspeção de backup segue acontecendo, mas sem selecionar uma categoria oculta.
+- [ ] Strings das categorias ocultas (`settings_browsing`, `settings_recording_title`, `settings_backup_restore`, `EPG Sources`) podem permanecer em `strings.xml` para evitar impacto em outros consumidores.
+
+## Fase 5 — Ativação e sincronização
+
+Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
+
+- [ ] Login Xtream salva o provedor como `isActive = true` e `status = ACTIVE`.
+- [ ] O caminho de edição também mantém `isActive = true` e `status = ACTIVE`.
+- [ ] Após salvar, agenda a retomada da sincronização e o EPG em background.
+- [ ] O login retorna após despachar o trabalho, sem esperar o catálogo inteiro.
+- [ ] `handleInitialOnboardingSync` continua preservado para M3U, Jellyfin e Stalker.
+
+## Fase 6 — Defaults da experiência Eh!IPTV
+
+Em instalação limpa, confirme os defaults abaixo. O usuário ainda pode alterá-los nas configurações depois.
+
+- [ ] Navegação superior padrão = `[SEARCH, LIVE_TV, MOVIES, SERIES, SETTINGS]`.
+- [ ] Tela inicial padrão = `LIVE_TV`.
+- [ ] `liveTvChannelMode` padrão = `PRO`.
+- [ ] `liveTvQuickFilterVisibility` padrão = `HIDE`.
+- [ ] Primeira categoria Live TV = `All Channels` (`ChannelRepository.ALL_CHANNELS_ID`).
+- [ ] A área de TV ao vivo não mostra filtros rápidos no primeiro acesso.
+
+Verifique em instalação limpa:
+
+```bash
+adb -s d1d1b8f3 shell pm clear app.ehtudo.iptv.debug
+```
+
+## Fase 7 — Strings e marca
+
+- [ ] `welcome_brand_title` = `Eh! IPTV`.
+- [ ] `welcome_username_hint` = `Usuário`.
+- [ ] `welcome_password_hint` = `Senha`.
+- [ ] `welcome_save` = `Salvar`.
+- [ ] `welcome_username_required` e `welcome_password_required` existem.
+- [ ] `settings_providers` = `Eh!IPTV` em `values/strings.xml` e `values-pt/strings.xml`.
+- [ ] O texto do botão Salvar é branco no Welcome e em Configurações.
+- [ ] O fundo dos dois botões Salvar é azul-claro, preferencialmente `AppColors.BrandStrong`.
+- [ ] Ao adicionar novos recursos, atualize os arquivos de tradução necessários.
+
+## Fase 8 — Build e instalação
+
+```bash
+./gradlew :app:assembleDebug --no-daemon
+adb devices
+adb -s d1d1b8f3 install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+- [ ] Build termina com `BUILD SUCCESSFUL`.
+- [ ] O APK instala no Xiaomi `d1d1b8f3` sem `INSTALL_FAILED_USER_RESTRICTED`.
+- [ ] Use `adb -s` explicitamente se houver mais de um dispositivo conectado.
+- [ ] A instalação incremental preserva os dados; use `pm clear` somente quando precisar validar uma instalação limpa.
+
+## Fase 9 — Verificação funcional
+
+1. Instale/limpe o app e abra o Welcome.
+2. Confirme o título, os dois campos e o botão Salvar azul-claro com texto branco.
+3. Toque em Salvar vazio e confirme `Digite seu usuário`.
+4. Informe credenciais válidas e confirme a entrada no app.
+5. Abra Configurações e confirme que a categoria se chama `Eh!IPTV`.
+6. Exclua o último provedor, se necessário, e confirme que o formulário inline reaparece.
+7. Confirme que Combined M3U e Adicionar provedor continuam ocultos.
+8. Salve credenciais pelo formulário de Configurações e confirme que o provedor aparece.
+8.1. Abra a categoria `Reprodução` e confirme que ela mostra apenas `Live stream format` e o card de teste de velocidade.
+8.2. Confirme que o rail lateral só lista `Eh!IPTV`, `Reprodução`, `Privacidade` e `Sobre`. As categorias de Navegação, Gravação, Backup e EPG sources não devem aparecer.
+9. Verifique o banco após o login:
+
+```bash
 adb -s d1d1b8f3 exec-out run-as app.ehtudo.iptv.debug cat databases/streamvault.db > /tmp/db.sqlite
 sqlite3 /tmp/db.sqlite "SELECT id, name, is_active, status, server_url, username FROM providers;"
 ```
 
-The expected state of an "applied" build:
-- `server_url = http://dnstv.top/` (or your reseller URL)
-- `is_active = 1`, `status = ACTIVE` after first login
-- `name = Eh! IPTV` (or your brand)
+Esperado: nome `Eh! IPTV`, URL `http://dnstv.top/`, `is_active = 1` e `status = ACTIVE`.
 
-## Phase 1 — Code contracts that must hold
-
-After applying the simplification skills, the following must be true. **Any deviation is a regression.**
-
-### Welcome screen (`WelcomeScreen.kt`)
-
-- [ ] Title text = `R.string.welcome_brand_title` ("Eh! IPTV").
-- [ ] Only two `OutlinedTextField`s, `Usuário` and `Senha`, both with `VisualTransformation = None` (i.e. plain text).
-- [ ] No eye-icon, no `PasswordVisualTransformation`, no `keyboardType = KeyboardType.Password`.
-- [ ] The `WelcomeViewModel.loginXtream()` function:
-  - validates non-blank inputs and sets `_error` accordingly
-  - builds `XtreamProviderSetupCommand(serverUrl = HARDCODED_XTREAM_URL, name = DEFAULT_PROVIDER_NAME, xtreamFastSyncEnabled = true)`
-  - on success, returns `Result.success(providerData)` without waiting for sync to complete
-- [ ] `HARDCODED_XTREAM_URL` and `DEFAULT_PROVIDER_NAME` are `private const val` at the top of the file.
-
-### Provider setup screen (`ProviderSetupScreen.kt`)
-
-- [ ] Same two `private const val` constants present, byte-identical to the welcome file.
-- [ ] `SourceType.XTREAM -> { ... }` branch contains exactly two `ProviderTextField`s (username + password) and a single `ActionButton`. No server URL field, no playlist name field, no `AdvancedProviderOptionsSection(...)` call.
-- [ ] Both `onLoginXtream` lambdas (wide and narrow layouts) pass `HARDCODED_XTREAM_URL` and `DEFAULT_PROVIDER_NAME` instead of the local form state.
-- [ ] The `ProviderTextField` for `name` is wrapped in `if (sourceType != SourceType.XTREAM) { ... }`.
-
-### Activation flow (`ProviderRepositoryImpl.loginXtream`)
-
-- [ ] The insert path sets `isActive = true, status = ACTIVE` (not `false` / `PARTIAL`).
-- [ ] The edit path sets `isActive = true, status = ACTIVE` (not `false` / `PARTIAL`).
-- [ ] After the insert/update, the function calls `syncManager.scheduleProviderSyncResume(providerData.id)` and `maybeScheduleBackgroundEpgSync(providerData.id)` instead of running the full sync inline.
-- [ ] The function returns `Result.success(providerData)` immediately after the background dispatch.
-- [ ] `handleInitialOnboardingSync` is still defined and still called from `loginM3u`, `loginJellyfin`, `loginStalker` (those paths are unchanged).
-
-### Brand defaults baked into the build (Eh! IPTV reseller profile)
-
-These five defaults apply on a **fresh install** (DataStore never written, no per-user override). They make the app feel like a single-purpose IPTV client instead of a general StreamVault. Single source of truth is either an Elvis in `data/.../PreferencesRepository.kt` or a `fromStorage(value: String?): …` fallback in `domain/.../model/*.kt`. End-user can still override these in Settings — they only kick in when the user has never set them.
-
-- [ ] **Top-nav tabs** = `[SEARCH, LIVE_TV, MOVIES, SERIES, SETTINGS]`. The `HOME`, `DOWNLOADS`, `GUIDE`, and `PLUGINS` tabs are **never shown** by default. (`SETTINGS` is `isRequired` so it auto-injects.) Source: `domain/src/main/java/app/ehtudo/domain/model/AppTopLevelDestination.kt:19-29` → `AppTopLevelDestination.defaultOrder`. Consumed by `decodeAppTopLevelDestinations()` in `PreferencesRepository.kt:2088` as the `null/empty → default` branch.
-- [ ] **Landing tab on launch** = `LIVE_TV`. Source: `domain/src/main/java/app/ehtudo/domain/model/AppLandingDestination.kt:16-17` → `fromStorage(... ) ?: LIVE_TV`. Initial UI placeholder for `SettingsUiState.appLandingDestination = AppLandingDestination.LIVE_TV` at `SettingsUiStateModel.kt:72` and `SettingsStateBindings.kt:48`.
-- [ ] **`liveTvChannelMode`** = `PRO`. Source: `data/src/main/java/app/ehtudo/data/preferences/PreferencesRepository.kt` → `Flow { preferences[PreferencesKeys.LIVE_TV_CHANNEL_MODE] ?: "PRO" }`. Consumer `LiveTvChannelMode.fromStorage(... ) ?: PRO` in `app/.../ui/model/LiveTvChannelMode.kt:9-10` (defense in depth).
-- [ ] **`liveTvQuickFilterVisibility`** = `HIDE` (no "Filtros rápidos" panel on the Live TV sidebar). Source: Elvis in `PreferencesRepository.kt` returning `"hide"` when unset. Consumer fallback in `app/.../ui/model/LiveTvQuickFilterVisibilityMode.kt:9-11`. Initial UI placeholder `SettingsStateBindings.kt:99`.
-- [ ] **Initial selected category on Live TV** = `All Channels` (id `ChannelRepository.ALL_CHANNELS_ID = -1_000_000L`). Source: `app/.../ui/screens/home/HomeViewModel.kt:548-557` → `(defaultId ?: ChannelRepository.ALL_CHANNELS_ID).let { categories.find { it.id == it } }`. This only fires when `currentSelected` is `null` (fresh install + no provider). The user's last visit (`lastLiveCategoryId`) is honored on subsequent launches.
-
-Verification snippet for these five:
+10. Aguarde a sincronização e confirme canais Live TV:
 
 ```bash
-adb -s d1d1b8f3 shell pm clear app.ehtudo.iptv.debug
-# (re-auth) … → expect top-bar shows 5 tabs (no HOME/DOWNLOADS/GUIDE/PLUGINS),
-#             expect the app lands directly on TV ao vivo,
-#             expect category sidebar has no "Filtros rápidos" header,
-#             expect "All Channels (2737)" selected on first paint,
-#             expect channel rows in PRO density.
+adb -s d1d1b8f3 logcat -d -t 300 | grep -iE "ProviderSync|XtreamIndex|BackgroundEpg"
+sqlite3 /tmp/db.sqlite "SELECT COUNT(*) FROM channels;"
 ```
 
-### Strings (`strings.xml`)
+## Fase 10 — Atualização do roteiro após novas mudanças
 
-- [ ] `welcome_brand_title` = "Eh! IPTV"
-- [ ] `welcome_username_hint` = "Usuário"
-- [ ] `welcome_password_hint` = "Senha"
-- [ ] `welcome_save` = "Salvar"
-- [ ] `welcome_username_required` and `welcome_password_required` exist.
+Ao reaplicar o roteiro sobre uma nova base StreamVault:
 
-### Build / install / runtime
+1. Rode `git log --follow -- docs/skill/iptv-reseller-simplification-checklist.md`.
+2. Compare os commits posteriores ao último commit que alterou este arquivo.
+3. Inspecione `git show <commit>` e incorpore ao roteiro somente mudanças de produto, comandos de build, caminhos e verificações que ainda sejam válidos.
+4. Atualize o campo de referência da versão/commit no início deste documento.
+5. Rode `git diff --check` e revise o diff completo.
+6. Rode `graphify update .` após modificar código; se o comando não existir no ambiente, registre a limitação.
 
-- [ ] `./gradlew :app:assembleDebug --no-daemon` → `BUILD SUCCESSFUL`
-- [ ] APK installs on Xiaomi (`d1d1b8f3`) without `INSTALL_FAILED_USER_RESTRICTED`
-- [ ] First launch: shows the brand title + two plain-text inputs.
-- [ ] Type creds → tap Salvar → land on Home **in under 2 seconds** (no `Sync required` banners).
-- [ ] TV ao vivo shows > 0 channels within the first minute of background sync.
+## Regressões conhecidas
 
-## Phase 2 — End-to-end verification (run after every change)
+| Sintoma | Verificação inicial |
+|---|---|
+| Salvar não faz nada | Confirme o `onClick` do `TvButton` e a referência do ViewModel. |
+| Erro não aparece | Confirme `quickXtreamError`/`error` e as strings de validação. |
+| Provedor não aparece em Configurações | Verifique o observer de `providerRepository.getProviders()`. |
+| Provedor volta inativo | Consulte `is_active` e `status` no banco e revise o caminho Xtream. |
+| Sincronização não inicia | Verifique logs de `ProviderSync`, `XtreamIndex` e `BackgroundEpg`. |
+| Combined M3U reaparece | Procure `CombinedM3uProfilesCard` em `SettingsProviderSection.kt`. |
+| Botão Salvar perde contraste | Confirme `ButtonDefaults.colors`, `AppColors.BrandStrong` e `Color.White` nos dois cards. |
+| Xiaomi recusa instalação | Habilite `Instalar via USB` nas opções do desenvolvedor do aparelho. |
+| Reprodução mostra toggles extras | Verifique `SettingsPlaybackSection.kt`; apenas `Live stream format` e `InternetSpeedTestCard` devem ser emitidos. |
+| Rail mostra categorias ocultas | Remova as entradas de `SettingsNavigationRail.kt` e ajuste o `if/else` em `SettingsContentPane.kt` para os índices restantes. |
 
-```bash
-# 1. Clean install
-adb -s d1d1b8f3 shell pm clear app.ehtudo.iptv.debug
-adb -s d1d1b8f3 install -r app/build/outputs/apk/debug/app-debug.apk
+## Não fazer
 
-# 2. Launch
-adb -s d1d1b8f3 shell am start -n app.ehtudo.iptv.debug/app.ehtudo.iptv.MainActivity
-sleep 4
-
-# 3. Inspect the welcome screen
-adb -s d1d1b8f3 exec-out screencap -p > /tmp/welcome.png
-# Verify: title "Eh! IPTV", two text fields labeled Usuário / Senha, Salvar button.
-
-# 4. Try empty Salvar (validates the empty-state UX)
-# Tap on Salvar without typing → expect red error "Digite seu usuário".
-
-# 5. Try valid creds
-# Fill in user/pass → tap Salvar → expect navigation to Home in < 3s.
-
-# 6. Inspect the DB right after Salvar
-adb -s d1d1b8f3 exec-out run-as app.ehtudo.iptv.debug cat databases/streamvault.db > /tmp/db.sqlite
-sqlite3 /tmp/db.sqlite "SELECT id, name, is_active, status FROM providers;"
-# Expect: is_active=1, status=ACTIVE
-
-# 7. Watch the background Worker
-adb -s d1d1b8f3 logcat -d -t 200 | grep -iE "ProviderSync|XtreamIndex|BackgroundEpg"
-# Expect: workers start, channel rows get inserted over time.
-
-# 8. Check TV ao vivo populates
-sqlite3 /tmp/db.sqlite "SELECT COUNT(*) FROM channels WHERE provider_id=1;"
-# Expect: > 0 (eventually reaches 2700+ for the Eh! IPTV Xtream).
-
-# 9. Check the live UI
-adb -s d1d1b8f3 shell input keyevent KEYCODE_DPAD_RIGHT
-adb -s d1d1b8f3 shell input keyevent KEYCODE_DPAD_CENTER
-sleep 2
-adb -s d1d1b8f3 exec-out screencap -p > /tmp/livetv.png
-# Expect: "All Channels 2737" or similar.
-
-# 10. Verify the 5 brand defaults (Brand-defaults section above)
-# 10a. Top-nav has 5 tabs and no HOME/DOWNLOADS/GUIDE/PLUGINS
-adb -s d1d1b8f3 exec-out screencap -p > /tmp/topnav.png
-# Expect the top-bar to show only: TV ao vivo | Filmes | Série | Pesquisar | Configurações.
-# 10b. Default landing is LIVE_TV (no Home tab focused, "TV ao vivo" pill is highlighted)
-# 10c. liveTvChannelMode == PRO (channel rows are dense, big-thumbnail layout)
-# 10d. liveTvQuickFilterVisibility == HIDE (categories sidebar does NOT show
-#     the "Filtros rápidos — Mostrar" header)
-# 10e. Initial selected Live TV category is "All Channels" with channels loaded.
-```
-
-## Phase 3 — Known regression patterns to look for
-
-When something breaks, look for these signatures first:
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `INITIAL_ONBOARDING_PHASE_FAILED` in logcat after Salvar | Auth failure with `http://dnstv.top/` (DNS, 401, `auth=0`) | Curl the URL manually (`curl -v "http://dnstv.top/player_api.php?username=test&password=test"`) to confirm. Then check `XtreamErrorFormatter` for the exact reason. |
-| Home shows "Sincronização necessária" forever | The Worker never started, or `is_active` flipped back to 0 | `adb shell dumpsys jobscheduler | grep ProviderSync` to see the job state. Inspect `sync_metadata` table. |
-| Salvar does nothing, no error shown | The composable's `onClick` is bound to a stale `viewModel.loginXtream` reference; the ViewModel re-creates the function on each recomposition in some refactors | Re-read the call site in `WelcomeStartCard` and confirm the method-reference. |
-| `XtreamErrorFormatter.message` returns the bare (non-translated) string | `R.string` is missing | Check `welcome_username_required` / `welcome_password_required`. |
-| `INITIAL_ONBOARDING_PHASE_STARTING` never advances to `COMPLETED` | The `XtreamLiveSyncReason.INITIAL_ONBOARDING` branch is stuck | This was the old bug; with the best-effort activation, the phase is now advisory, not gating. The Worker will still run. |
-
-## Phase 4 — When to revisit
-
-These skills become stale when:
-- The Xtream server moves to `https://` (regenerate the curl, update `network_security_config.xml` if you scope per-domain).
-- The product wants a multi-tenant mode (more than one Xtream URL). Then `HARDCODED_XTREAM_URL` becomes a per-tenant setting and skills 1, 2, 3 must be reworked.
-- The product adds OAuth / magic-link / QR-pairing onboarding. Then `WelcomeViewModel.loginXtream` is replaced by a different entry point; the constants in skill 3 stay.
-- The user wants the welcome screen to also accept the playlist name (multi-brand per reseller). Then `DEFAULT_PROVIDER_NAME` becomes a per-reseller default and skill 3 must be reworked.
-
-In any of these cases, **read the affected skill first**, then refactor in its recommended order.
-
-## Anti-patterns (do not)
-
-- Do **not** combine skill 5 (package rename) with any of skills 1–4 in the same commit. The diff is unreadable.
-- Do **not** introduce a "Default URL" preference that the user can mutate. The URL is compile-time.
-- Do **not** remove `handleInitialOnboardingSync` even after applying the best-effort activation. M3U / Stalker / Jellyfin still use it.
-- Do **not** change the `XtreamProvider`/`ValidateAndAddProvider` layer to skip auth. Auth is the contract that gates persistence.
-- Do **not** add a "Sync now" button to the welcome screen. The welcome screen's only job is to get the user in; sync is background.
+- Não adicionar URL editável ao fluxo simplificado.
+- Não mascarar a senha se a especificação exigir texto simples.
+- Não adicionar o botão Adicionar provedor novamente à seção simplificada sem revisar este roteiro.
+- Não reintroduzir Combined M3U na tela de Configurações sem decisão explícita do produto.
+- Não reintroduzir categorias do rail (Navegação, Gravação, Backup, EPG sources) sem revisar este roteiro.
+- Não reintroduzir toggles extras de Reprodução além de `Live stream format` e teste de velocidade sem revisar este roteiro.
+- Não remover a autenticação do `ValidateAndAddProvider`.
+- Não bloquear o Welcome aguardando o catálogo inteiro.
+- Não commitar credenciais de cliente.
+- Não misturar renome de pacote com mudanças visuais e de onboarding no mesmo commit quando uma separação for possível.

@@ -58,91 +58,11 @@ internal fun SettingsContentPane(
             settingsPlaybackSection(
                 uiState = uiState,
                 viewModel = viewModel,
-                timeshiftDepthLabel = screenLabels.timeshiftDepthLabel,
-                timeshiftBackendLabel = screenLabels.timeshiftBackendLabel,
-                audioDecoderModeLabel = screenLabels.audioDecoderModeLabel,
-                videoDecoderModeLabel = screenLabels.videoDecoderModeLabel,
-                playbackBufferModeLabel = screenLabels.playbackBufferModeLabel,
-                audioOutputPreferenceLabel = screenLabels.audioOutputPreferenceLabel,
-                externalPlaybackModeLabel = screenLabels.externalPlaybackModeLabel,
-                surfaceModeLabel = screenLabels.surfaceModeLabel,
-                vodHttpProtocolLabel = screenLabels.vodHttpProtocolLabel,
-                playbackSpeedLabel = screenLabels.playbackSpeedLabel,
-                defaultStopTimerLabel = screenLabels.defaultStopTimerLabel,
-                defaultIdleTimerLabel = screenLabels.defaultIdleTimerLabel,
-                audioVideoOffsetLabel = screenLabels.audioVideoOffsetLabel,
-                controlsTimeoutLabel = screenLabels.controlsTimeoutLabel,
-                liveOverlayTimeoutLabel = screenLabels.liveOverlayTimeoutLabel,
-                noticeTimeoutLabel = screenLabels.noticeTimeoutLabel,
-                diagnosticsTimeoutLabel = screenLabels.diagnosticsTimeoutLabel,
-                preferredAudioLanguageLabel = screenLabels.preferredAudioLanguageLabel,
-                subtitleSizeLabel = screenLabels.subtitleSizeLabel,
-                subtitleTextColorLabel = screenLabels.subtitleTextColorLabel,
-                subtitleBackgroundLabel = screenLabels.subtitleBackgroundLabel,
-                liveTranslationEndpointLabel = screenLabels.liveTranslationEndpointLabel,
-                wifiQualityLabel = screenLabels.wifiQualityLabel,
-                ethernetQualityLabel = screenLabels.ethernetQualityLabel,
                 lastSpeedTestLabel = screenLabels.lastSpeedTestLabel,
                 lastSpeedTestSummary = screenLabels.lastSpeedTestSummary,
-                speedTestRecommendationLabel = screenLabels.speedTestRecommendationLabel,
-                onShowTimeshiftDepthDialogChange = { dialogState.showTimeshiftDepthDialog = it },
-                onShowTimeshiftBackendDialogChange = { dialogState.showTimeshiftBackendDialog = it },
-                onShowAudioDecoderModeDialogChange = { dialogState.showAudioDecoderModeDialog = it },
-                onShowVideoDecoderModeDialogChange = { dialogState.showVideoDecoderModeDialog = it },
-                onShowPlaybackBufferModeDialogChange = { dialogState.showPlaybackBufferModeDialog = it },
-                onShowAudioOutputPreferenceDialogChange = { dialogState.showAudioOutputPreferenceDialog = it },
-                onShowExternalPlaybackModeDialogChange = { dialogState.showExternalPlaybackModeDialog = it },
-                onShowSurfaceModeDialogChange = { dialogState.showSurfaceModeDialog = it },
-                onShowVodHttpProtocolDialogChange = { dialogState.showVodHttpProtocolDialog = it },
-                onShowPlaybackSpeedDialogChange = { dialogState.showPlaybackSpeedDialog = it },
-                onShowDefaultStopTimerDialogChange = { dialogState.showDefaultStopTimerDialog = it },
-                onShowDefaultIdleTimerDialogChange = { dialogState.showDefaultIdleTimerDialog = it },
-                onShowAudioVideoOffsetDialogChange = { dialogState.showAudioVideoOffsetDialog = it },
-                onShowControlsTimeoutDialogChange = { dialogState.showControlsTimeoutDialog = it },
-                onShowLiveOverlayTimeoutDialogChange = { dialogState.showLiveOverlayTimeoutDialog = it },
-                onShowNoticeTimeoutDialogChange = { dialogState.showNoticeTimeoutDialog = it },
-                onShowDiagnosticsTimeoutDialogChange = { dialogState.showDiagnosticsTimeoutDialog = it },
-                onShowAudioLanguageDialogChange = { dialogState.showAudioLanguageDialog = it },
-                onShowSubtitleSizeDialogChange = { dialogState.showSubtitleSizeDialog = it },
-                onShowSubtitleTextColorDialogChange = { dialogState.showSubtitleTextColorDialog = it },
-                onShowSubtitleBackgroundDialogChange = { dialogState.showSubtitleBackgroundDialog = it },
-                onShowLiveTranslationEndpointDialogChange = { dialogState.showLiveTranslationEndpointDialog = it },
-                onShowWifiQualityDialogChange = { dialogState.showWifiQualityDialog = it },
-                onShowEthernetQualityDialogChange = { dialogState.showEthernetQualityDialog = it }
+                speedTestRecommendationLabel = screenLabels.speedTestRecommendationLabel
             )
         } else if (dialogState.selectedCategory == 2) {
-    settingsBrowsingSection(
-        uiState = uiState,
-        viewModel = viewModel,
-        context = context,
-        appLandingDestinationLabel = screenLabels.appLandingDestinationLabel,
-        topNavigationSummaryLabel = screenLabels.topNavigationSummaryLabel,
-        homeDashboardSummaryLabel = screenLabels.homeDashboardSummaryLabel,
-        guideDefaultCategoryLabel = screenLabels.guideDefaultCategoryLabel,
-        timeFormatLabel = screenLabels.timeFormatLabel,
-        appLanguageLabel = screenLabels.appLanguageLabel,
-                onShowLiveTvModeDialogChange = { dialogState.showLiveTvModeDialog = it },
-                onShowLiveTvFiltersDialogChange = { dialogState.showLiveTvFiltersDialog = it },
-                onShowLiveTvQuickFilterVisibilityDialogChange = { dialogState.showLiveTvQuickFilterVisibilityDialog = it },
-                onShowLiveChannelNumberingDialogChange = { dialogState.showLiveChannelNumberingDialog = it },
-        onShowLiveChannelGroupingDialogChange = { dialogState.showLiveChannelGroupingDialog = it },
-        onShowGroupedChannelLabelDialogChange = { dialogState.showGroupedChannelLabelDialog = it },
-        onShowLiveVariantPreferenceDialogChange = { dialogState.showLiveVariantPreferenceDialog = it },
-        onShowTopNavigationDialogChange = { dialogState.showTopNavigationDialog = it },
-        onShowHomeDashboardDialogChange = { dialogState.showHomeDashboardDialog = it },
-        onShowLandingScreenDialogChange = { dialogState.showLandingScreenDialog = it },
-        onShowGuideDefaultCategoryDialogChange = { dialogState.showGuideDefaultCategoryDialog = it },
-        onShowTimeFormatDialogChange = { dialogState.showTimeFormatDialog = it },
-                onShowVodViewModeDialogChange = { dialogState.showVodViewModeDialog = it },
-                onShowVodDuplicateHandlingDialogChange = { dialogState.showVodDuplicateHandlingDialog = it },
-                onShowVodVariantPreferenceDialogChange = { dialogState.showVodVariantPreferenceDialog = it },
-                onCategorySortDialogTypeChange = { dialogState.categorySortDialogType = it },
-                onShowLanguageDialogChange = { dialogState.showLanguageDialog = it },
-                onRemoteShortcutDialogTargetChange = {
-                    dialogState.selectedRemoteShortcutTargetKey = it?.storageKey()
-                }
-            )
-        } else if (dialogState.selectedCategory == 3) {
             settingsPrivacySection(
                 uiState = uiState,
                 viewModel = viewModel,
@@ -152,39 +72,7 @@ internal fun SettingsContentPane(
                 onShowLevelDialogChange = { dialogState.showLevelDialog = it },
                 onShowClearHistoryDialogChange = { dialogState.showClearHistoryDialog = it }
             )
-        } else if (dialogState.selectedCategory == 4) {
-            settingsRecordingSection(
-                uiState = uiState,
-                viewModel = viewModel,
-                onChooseFolder = onChooseRecordingFolder,
-                onUseUsbStorage = onUseUsbRecordingStorage,
-                onShowRecordingPatternDialogChange = { dialogState.showRecordingPatternDialog = it },
-                onShowRecordingRetentionDialogChange = { dialogState.showRecordingRetentionDialog = it },
-                onShowRecordingConcurrencyDialogChange = { dialogState.showRecordingConcurrencyDialog = it },
-                onShowRecordingPaddingDialogChange = { dialogState.showRecordingPaddingDialog = it },
-                onShowRecordingBrowserDialogChange = { dialogState.showRecordingBrowserDialog = it }
-            )
-        } else if (dialogState.selectedCategory == 5) {
-            settingsBackupSection(
-                onCreateBackup = onCreateBackup,
-                onShareBackup = onShareBackup,
-                onRestoreBackup = onRestoreBackup,
-                onCreateBackupUsb = onCreateBackupUsb,
-                onRestoreBackupUsb = onRestoreBackupUsb
-            )
-            settingsDriveBackupSection(
-                uiState = uiState,
-                onSignIn = onDriveSignIn,
-                onSignOut = onDriveSignOut,
-                onPush = onDrivePush,
-                onPull = onDrivePull
-            )
-        } else if (dialogState.selectedCategory == 6) {
-            epgSourcesSection(
-                uiState = uiState,
-                viewModel = viewModel
-            )
-        } else if (dialogState.selectedCategory == 7) {
+        } else if (dialogState.selectedCategory == 3) {
             settingsAboutSection(
                 uiState = uiState,
                 context = context,

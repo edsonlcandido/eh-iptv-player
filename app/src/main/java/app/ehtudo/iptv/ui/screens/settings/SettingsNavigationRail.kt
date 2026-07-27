@@ -41,29 +41,9 @@ internal fun SettingsNavigationRail(
             accent = Color(0xFF9E8FFF)
         ),
         SettingsNavEntry(
-            label = stringResource(R.string.settings_browsing),
-            icon = "#",
-            accent = Color(0xFF26A69A)
-        ),
-        SettingsNavEntry(
             label = stringResource(R.string.settings_privacy),
             icon = "L",
             accent = Color(0xFFFFB74D)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_recording_title),
-            icon = "R",
-            accent = Color(0xFFEF5350)
-        ),
-        SettingsNavEntry(
-            label = stringResource(R.string.settings_backup_restore),
-            icon = "B",
-            accent = Color(0xFF42A5F5)
-        ),
-        SettingsNavEntry(
-            label = "EPG Sources",
-            icon = "E",
-            accent = Color(0xFF66BB6A)
         ),
         SettingsNavEntry(
             label = stringResource(R.string.settings_about),

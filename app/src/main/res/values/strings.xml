@@ -375,6 +375,7 @@
     <string name="settings_category_type_movies_description">Sort and hide provider movie categories without affecting Favorites, Resume, or custom shelves.</string>
     <string name="settings_category_type_series_description">Sort and hide provider series categories without affecting Favorites, Continue Watching, or custom shelves.</string>
     <string name="settings_playback">Playback</string>
+    <string name="settings_live_stream_format">Live stream format</string>
     <string name="settings_playback_subtitle">Tune decoder and buffering behavior for smoother playback.</string>
     <string name="settings_external_playback">Default playback app</string>
     <string name="settings_external_playback_subtitle">Choose which app opens streams when you play a channel or title.</string>

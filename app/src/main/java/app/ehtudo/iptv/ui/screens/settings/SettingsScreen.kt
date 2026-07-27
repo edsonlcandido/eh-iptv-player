@@ -246,7 +246,6 @@ fun SettingsScreen(
         val uri = initialBackupImportUri?.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
         if (handledInitialBackupImportUri == uri) return@LaunchedEffect
         handledInitialBackupImportUri = uri
-        dialogState.selectedCategory = 5
         viewModel.inspectBackup(uri)
     }
 
