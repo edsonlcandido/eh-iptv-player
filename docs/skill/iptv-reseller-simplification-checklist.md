@@ -4,7 +4,7 @@
 
 Usar este documento como checklist repetível para transformar uma nova cópia do projeto base **StreamVault** em uma build simplificada de revenda chamada **Eh!IPTV**. Execute as fases na ordem, confirme cada item e só marque a fase como concluída após a verificação correspondente.
 
-Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail e a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico. A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
+Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail, a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico, a seção Sobre limitada a Versão/Site/Agradecimento, a Fase 4f (VOD enxuto em Filmes e Séries) e a Fase 4g (Detalhes VOD enxutos — somente Play/Chromecast/Favorito/Trailer). A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
 
 ## Quando usar
 
@@ -161,6 +161,44 @@ Arquivos principais:
 - [ ] Imports não usados em `SettingsBackupAboutSections.kt` (`LaunchedEffect`, `AppUpdateActionState`) foram removidos.
 - [ ] Strings novas em `values/strings.xml`: `settings_site`, `settings_site_url`, `settings_acknowledgment`, `settings_acknowledgment_url`. Em `values-pt/strings.xml`: `settings_site`, `settings_site_url`, `settings_acknowledgment` (= `Agradecimento`), `settings_acknowledgment_url`.
 
+## Fase 4f — VOD enxuto (somente prateleiras em Filmes e Séries)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/movies/MoviesScreen.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/series/SeriesScreen.kt`
+
+- [ ] A página de **Filmes** mostra apenas as prateleiras (em ordem): Continuar assistindo → Favoritos → Mais recentes → Mais bem avaliados → Categorias.
+- [ ] A página de **Séries** mostra apenas as prateleiras equivalentes (na mesma ordem, com títulos traduzidos via `library_lens_fresh_series`).
+- [ ] O `hero` strip (`VodHeroStrip`) **não** é renderizado na `LazyColumn` do modo preview (default) — o bloco `item(key = "hero") { ... }` foi removido.
+- [ ] A linha de pílulas (`VodActionChipRow` com `browse_all` / `categories` / `favorites` / `resume` / `top_rated` / `fresh`) **não** é renderizada no topo — o bloco `item(key = "actions") { ... }` foi removido.
+- [ ] O `MoviesVodClassicContent` e o `SeriesVodClassicContent` (modo CLASSIC, `VodViewMode.CLASSIC`) **podem** continuar usando `VodActionChipRow` para os filtros de Browse/Filter — esses vivem abaixo do `VodClassicContentHeader` e são independentes do chrome superior.
+- [ ] As variáveis `heroMovie`/`heroSeries` (derivadas de `freshMovies/favoriteMovies`) foram removidas das duas telas; não há mais fallback `if (hero == null)`.
+- [ ] `fallbackMovieId`/`fallbackSeriesId` é derivado diretamente da primeira prateleira não-vazia (`favoriteMovies` → `freshMovies` → `topRatedMovies` → `catEntries`).
+- [ ] O `initialFocusRequester` foi movido do hero para o primeiro card da primeira prateleira visível. Padrão adotado em `favorites_row`, `fresh_row`, `top_rated_row` e em `catEntries`: `Modifier.then(if (movie.id == fallbackMovieId) Modifier.focusRequester(initialFocusRequester) else Modifier)` (e a variante com `.width(favoriteCardWidth)` no `favorites_row`). `FocusRestoreHost` continua sendo acionado normalmente.
+- [ ] O import `VodHeroStrip` foi removido de `MoviesScreen.kt` e `SeriesScreen.kt` (nenhum uso restante após a remoção do hero).
+- [ ] Os imports `VodActionChipRow` e `VodActionChip` continuam presentes porque o modo CLASSIC e o `VodCategoryPickerDialog` (acionado a partir das pílulas clássicas) ainda os utilizam.
+- [ ] Os composables `VodHeroStrip` e `VodActionChipRow` em `app/src/main/java/app/ehtudo/iptv/ui/components/shell/VodChrome.kt` permanecem intactos — outros consumidores continuam reaproveitando-os.
+- [ ] Strings usadas apenas pelo hero/pílulas removidos (`library_full_browse_title_movies`, `library_full_browse_title_series`, `library_full_browse_subtitle`, `movies_categories_title`, `series_categories_title`, `library_lens_continue`, `library_lens_top_rated`, `library_lens_fresh_movies`, `library_lens_fresh_series`, `favorites_title`, `library_saved_items_count`, `movies_library_lens_subtitle`, `series_library_lens_subtitle`, `player_resume`) podem permanecer em `values/strings.xml` e `values-pt/strings.xml` enquanto outros fluxos (modo CLASSIC, picker de categoria, histórico de continue watching) as referenciarem. Não há strings exclusivas do hero/pílulas que precisem ser apagadas.
+- [ ] O build `:app:compileDebugKotlin` passa após a mudança (rodar `./gradlew :app:compileDebugKotlin --no-daemon`). Warnings pré-existentes sobre condições tautológicas em `locked && matchedCategory != null` podem continuar presentes — não foram introduzidos por esta fase.
+
+## Fase 4g — Detalhes VOD enxutos (somente Play / Chromecast / Favorito / Trailer quando houver)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/movies/MovieDetailScreen.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/series/SeriesDetailScreen.kt`
+
+- [ ] A linha de ações do **Filme** mostra, nesta ordem: `Play`/`Resume from …` → `Chromecast` → `Trailer` (somente se `hasTrailer`) → Favorito (heart).
+- [ ] A linha de ações da **Série** (em `SeriesDetailActions`, exibida quando há `resumeEpisode`) mostra, nesta ordem: `Resume · …`/`Play · …` → `Chromecast` → Favorito.
+- [ ] Cada **episódio** (`EpisodeItem`) renderiza apenas o card `EpisodeRowCard` clicável e o botão `Chromecast`. **Não há** botões `Download` ou `Copy URL` no card de episódio.
+- [ ] `Copy URL` (`R.string.stream_url_copy`) e `Download` (`R.string.download_button_label`) foram removidos da UI das telas de detalhe — eles não aparecem em nenhuma das três ações (filme / série / episódio).
+- [ ] Os parâmetros `onCopyUrl`, `onDownload`, `onCopyEpisodeUrl`, `onDownloadEpisode` foram removidos de `MovieDetailContent`, `MovieDetailHeroText`, `SeriesDetailContent`, `SeriesDetailActions` e `EpisodeItem`.
+- [ ] O helper `copyStreamUrlToClipboard(...)` foi removido de `MovieDetailScreen.kt` e `SeriesDetailScreen.kt` (não há mais chamadores); os imports `android.content.ClipData`, `android.content.ClipboardManager`, `kotlinx.coroutines.launch`, `androidx.compose.runtime.rememberCoroutineScope`, `app.ehtudo.domain.model.Result` foram removidos das duas telas.
+- [ ] As lambdas `coroutineScope.launch { copyStreamUrlToClipboard(...) }` e o wrapper `copyEpisodeUrl` foram removidos. `val coroutineScope = rememberCoroutineScope()` e `val copyEpisodeUrl: (Episode) -> Unit = ...` também.
+- [ ] O foco inicial do `MovieDetailScreen` permanece no botão `Play` (`playButtonFocusRequester.requestFocusSafely(...)`).
+- [ ] `viewModel.resolveCopyStreamUrl(...)` / `viewModel.downloadMovie(...)` / `viewModel.downloadEpisode(...)` podem permanecer no ViewModel mesmo sem chamadores na UI — não há remoção no escopo desta fase.
+- [ ] `MovieDetailViewModelCastingTest` e `SeriesDetailViewModelCastingTest` continuam passando (`./gradlew :app:testDebugUnitTest --no-daemon`). Esta fase não altera a superfície do ViewModel, então não há testes novos.
+- [ ] Strings (`stream_url_copy`, `download_button_label`, `stream_url_clip_label`, `stream_url_copied`, `stream_url_copy_failed`) podem permanecer em `values/strings.xml` e `values-pt/strings.xml` — outros fluxos (ex.: `AddToGroupDialog`, `ContinueWatching`) podem referenciá-las futuramente.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -280,6 +318,10 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 | Aparece item "Configurar PIN" na Privacidade | Não deve haver nenhum item para alterar o PIN do conteúdo adulto. Remova `AdultContentConfigurePinRow` e os callbacks `onShowPinDialogChange`/`onPendingActionChange` da assinatura de `settingsPrivacySection(...)`. |
 | Literal `0000` aparece na tela de Privacidade | A `subtitle` do toggle não pode mencionar o PIN. Remova qualquer referência a `0000` da `settings_adult_content_subtitle`. |
 | Sobre mostra Atualizações/Crash Reports/Build Info | Reescreva `settingsAboutSection(...)` para emitir apenas `SettingsRow(version)` + `ClickableSettingsRow(site)` + `ClickableSettingsRow(acknowledgment)`. Apague os blocos antigos de Updates e Crash Reports. |
+| Hero strip ou linha de pílulas reaparecem no topo de Filmes/Séries | Verifique `MoviesScreen.kt` e `SeriesScreen.kt`: os blocos `item(key = "hero") { ... }` e `item(key = "actions") { ... }` na `LazyColumn` do modo preview devem estar ausentes. O `focusRequester(initialFocusRequester)` deve estar no primeiro card de `favorites_row`/`fresh_row`/`top_rated_row`/`catEntries`, não em um `VodHeroStrip`. |
+| Foco não cai em nenhum card ao entrar em Filmes/Séries | Confirme que `Modifier.focusRequester(initialFocusRequester)` está sendo anexado ao primeiro card de `favorites_row` via `.then(if (movie.id == fallbackMovieId) Modifier.focusRequester(initialFocusRequester) else Modifier)` e que `fallbackMovieId` não está `null`. Garanta que `FocusRestoreHost` ainda chama `initialContentFocusRequester.requestFocusSafely(...)`. |
+| Botões `Copy URL` ou `Download` reaparecem nos detalhes VOD | Verifique `MovieDetailScreen.kt` (ação do filme), `SeriesDetailActions` (ação da série) e `EpisodeItem` (episódios). Em nenhum dos três deve haver `TvButton` lendo `R.string.stream_url_copy` ou `R.string.download_button_label`. A linha da série deve manter `Play`/`Resume · …`, `Chromecast` e o coração; cada episódio mantém apenas `Chromecast`. |
+| Detalhes do filme não focam no botão Play | Confirme que `MovieDetailHeroText` continua invocando `TvButton(onClick = onPlay, modifier = Modifier.focusRequester(playButtonFocusRequester), …)` e que `LaunchedEffect(movie.id) { playButtonFocusRequester.requestFocusSafely(...) }` permanece em `MovieDetailContent`. |
 
 ## Não fazer
 
@@ -291,6 +333,8 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 - Não reintroduzir toggles extras de Reprodução além de `Live stream format` e teste de velocidade sem revisar este roteiro.
 - Não reintroduzir o `ParentalControlCard` nem os toggles de Incógnito / Xtream name-based adult detection / Xtream Base64 na seção Privacidade sem revisar este roteiro.
 - Não reintroduzir Atualizações automáticas, Crash Reports, Build info, GitHub ou Doações na seção Sobre sem revisar este roteiro.
+- Não reintroduzir o `hero` strip (`VodHeroStrip`) nem a linha de pílulas (`VodActionChipRow` com `browse_all`/`categories`/`favorites`/`resume`/`top_rated`/`fresh`) no topo das páginas de Filmes e Séries (modo preview) sem revisar este roteiro.
+- Não reintroduzir `Copy URL` ou `Download` nas linhas de ação de `MovieDetailScreen`, `SeriesDetailActions` (ação da série) ou `EpisodeItem` sem revisar este roteiro. Cada ação da série/detalhe do filme deve manter apenas Play/Resume, Chromecast e Favorito (e Trailer no filme quando houver); cada episódio mantém apenas Chromecast.
 - Não remover a autenticação do `ValidateAndAddProvider`.
 - Não bloquear o Welcome aguardando o catálogo inteiro.
 - Não commitar credenciais de cliente.

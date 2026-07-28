@@ -1,8 +1,6 @@
 package app.ehtudo.iptv.ui.screens.movies
 
 import android.content.Intent
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.net.Uri
@@ -31,7 +29,6 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,8 +69,6 @@ import app.ehtudo.domain.model.VodMovieVariant
 import app.ehtudo.iptv.ui.interaction.TvClickableSurface
 import app.ehtudo.iptv.ui.interaction.TvButton
 import app.ehtudo.iptv.ui.interaction.TvIconButton
-import app.ehtudo.domain.model.Result
-import kotlinx.coroutines.launch
 
 @Composable
 fun MovieDetailScreen(
@@ -132,14 +127,6 @@ fun MovieDetailScreen(
                 isLoadingExternalRatings = uiState.isLoadingExternalRatings,
                 relatedContent = uiState.relatedContent,
                 onPlay = { onPlay(movie) },
-                onCopyUrl = {
-                    when (val result = viewModel.resolveCopyStreamUrl()) {
-                        is Result.Success -> result.data
-                        is Result.Error -> null
-                        Result.Loading -> null
-                    }
-                },
-                onDownload = {},
                 onCast = viewModel::castMovie,
                 onToggleFavorite = viewModel::toggleFavorite,
                 onSelectVariant = viewModel::selectMovieVariant,
@@ -161,8 +148,6 @@ private fun MovieDetailContent(
     isLoadingExternalRatings: Boolean,
     relatedContent: List<Movie>,
     onPlay: () -> Unit,
-    onCopyUrl: suspend () -> String?,
-    onDownload: () -> Unit,
     onCast: () -> Unit,
     onToggleFavorite: () -> Unit,
     onSelectVariant: (Long) -> Unit,
@@ -171,10 +156,8 @@ private fun MovieDetailContent(
     viewModel: MovieDetailViewModel
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val isTelevisionDevice = rememberIsTelevisionDevice()
     val playButtonFocusRequester = remember { FocusRequester() }
-    val onDownload: () -> Unit = { viewModel.downloadMovie(context) }
 
     LaunchedEffect(movie.id) {
         playButtonFocusRequester.requestFocusSafely(
@@ -254,12 +237,6 @@ private fun MovieDetailContent(
                             externalRatings = externalRatings,
                             isLoadingExternalRatings = isLoadingExternalRatings,
                             onPlay = onPlay,
-                            onCopyUrl = {
-                                coroutineScope.launch {
-                                    copyStreamUrlToClipboard(context, onCopyUrl())
-                                }
-                            },
-                            onDownload = onDownload,
                             onCast = onCast,
                             onToggleFavorite = onToggleFavorite,
                             onSelectVariant = onSelectVariant,
@@ -287,12 +264,6 @@ private fun MovieDetailContent(
                             externalRatings = externalRatings,
                             isLoadingExternalRatings = isLoadingExternalRatings,
                             onPlay = onPlay,
-                            onCopyUrl = {
-                                coroutineScope.launch {
-                                    copyStreamUrlToClipboard(context, onCopyUrl())
-                                }
-                            },
-                            onDownload = onDownload,
                             onCast = onCast,
                             onToggleFavorite = onToggleFavorite,
                             onSelectVariant = onSelectVariant,
@@ -389,8 +360,6 @@ private fun MovieDetailHeroText(
     externalRatings: ExternalRatings,
     isLoadingExternalRatings: Boolean,
     onPlay: () -> Unit,
-    onCopyUrl: () -> Unit,
-    onDownload: () -> Unit,
     onCast: () -> Unit,
     onToggleFavorite: () -> Unit,
     onSelectVariant: (Long) -> Unit,
@@ -462,24 +431,6 @@ private fun MovieDetailHeroText(
                         stringResource(R.string.movie_detail_play)
                     }
                 )
-            }
-            TvButton(
-                onClick = onCopyUrl,
-                colors = ButtonDefaults.colors(
-                    containerColor = AppColors.SurfaceEmphasis,
-                    contentColor = AppColors.TextPrimary
-                )
-            ) {
-                Text(stringResource(R.string.stream_url_copy))
-            }
-            TvButton(
-                onClick = onDownload,
-                colors = ButtonDefaults.colors(
-                    containerColor = AppColors.SurfaceEmphasis,
-                    contentColor = AppColors.TextPrimary
-                )
-            ) {
-                Text(stringResource(R.string.download_button_label))
             }
             TvButton(
                 onClick = onCast,
@@ -565,16 +516,6 @@ private fun MovieVersionSelector(
             }
         }
     }
-}
-
-private fun copyStreamUrlToClipboard(context: android.content.Context, url: String?) {
-    if (url.isNullOrBlank()) {
-        Toast.makeText(context, context.getString(R.string.stream_url_copy_failed), Toast.LENGTH_SHORT).show()
-        return
-    }
-    context.getSystemService(ClipboardManager::class.java)
-        ?.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.stream_url_clip_label), url))
-    Toast.makeText(context, context.getString(R.string.stream_url_copied), Toast.LENGTH_SHORT).show()
 }
 
 private fun resolveTrailerUrl(rawTrailer: String?): String? {

@@ -1194,7 +1194,7 @@
     <string name="player_muted_badge">Muted</string>
     <string name="player_cast">Cast</string>
     <string name="player_stop_casting">Stop Casting</string>
-    <string name="cast_button_label">Cast</string>
+    <string name="cast_button_label">Chromecast</string>
     <string name="cast_launching">Casting...</string>
     <string name="cast_started">Casting to the connected device.</string>
     <string name="cast_disconnected">Cast session disconnected.</string>

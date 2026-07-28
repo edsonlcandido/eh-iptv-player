@@ -1,7 +1,5 @@
 package app.ehtudo.iptv.ui.screens.series
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.widget.Toast
@@ -33,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -77,8 +74,6 @@ import app.ehtudo.domain.model.VodSeriesVariant
 import app.ehtudo.iptv.ui.interaction.TvClickableSurface
 import app.ehtudo.iptv.ui.interaction.TvButton
 import app.ehtudo.iptv.ui.interaction.TvIconButton
-import app.ehtudo.domain.model.Result
-import kotlinx.coroutines.launch
 
 private const val EPISODE_DETAIL_PAGE_SIZE = 100
 
@@ -144,16 +139,6 @@ fun SeriesDetailScreen(
         onSeasonSelected = viewModel::selectSeason,
         onEpisodeClick = onEpisodeClick,
         onResumeClick = onResumeClick ?: onEpisodeClick,
-        onCopyEpisodeUrl = { episode ->
-            when (val result = viewModel.resolveCopyStreamUrl(episode)) {
-                is Result.Success -> result.data
-                is Result.Error -> null
-                Result.Loading -> null
-            }
-        },
-        onDownloadEpisode = { episode ->
-            viewModel.downloadEpisode(context, episode)
-        },
         onCastResumeEpisode = viewModel::castResumeEpisode,
         onCastEpisode = viewModel::castEpisode,
         onBack = onBack
@@ -174,20 +159,12 @@ private fun SeriesDetailContent(
     onSeasonSelected: (Season) -> Unit,
     onEpisodeClick: (Episode) -> Unit,
     onResumeClick: (Episode) -> Unit,
-    onCopyEpisodeUrl: suspend (Episode) -> String?,
-    onDownloadEpisode: (Episode) -> Unit,
     onCastResumeEpisode: () -> Unit,
     onCastEpisode: (Episode) -> Unit,
     onBack: () -> Unit
 ) {
     val isTelevisionDevice = rememberIsTelevisionDevice()
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val copyEpisodeUrl: (Episode) -> Unit = { episode ->
-        coroutineScope.launch {
-            copyStreamUrlToClipboard(context, onCopyEpisodeUrl(episode))
-        }
-    }
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -331,7 +308,6 @@ private fun SeriesDetailContent(
                                      hasProgress = hasProgress,
                                      isCasting = isCasting,
                                      onResumeClick = onResumeClick,
-                                     onCopyUrl = { copyEpisodeUrl(ep) },
                                      onCast = onCastResumeEpisode,
                                      onToggleFavorite = onToggleFavorite
                                  )
@@ -419,7 +395,6 @@ private fun SeriesDetailContent(
                                      hasProgress = hasProgress,
                                      isCasting = isCasting,
                                      onResumeClick = onResumeClick,
-                                     onCopyUrl = { copyEpisodeUrl(ep) },
                                      onCast = onCastResumeEpisode,
                                      onToggleFavorite = onToggleFavorite
                                  )
@@ -479,8 +454,6 @@ private fun SeriesDetailContent(
                         episode = episode,
                         fallbackImageUrl = fallbackCover,
                         onClick = { onEpisodeClick(episode) },
-                        onCopyUrl = { copyEpisodeUrl(episode) },
-                        onDownload = { onDownloadEpisode(episode) },
                         onCast = { onCastEpisode(episode) },
                         isCasting = isCasting
                     )
@@ -549,7 +522,6 @@ private fun SeriesDetailActions(
     hasProgress: Boolean,
     isCasting: Boolean,
     onResumeClick: (Episode) -> Unit,
-    onCopyUrl: () -> Unit,
     onCast: () -> Unit,
     onToggleFavorite: () -> Unit
 ) {
@@ -577,15 +549,6 @@ private fun SeriesDetailActions(
                     )
                 }
             )
-        }
-        TvButton(
-            onClick = onCopyUrl,
-            colors = ButtonDefaults.colors(
-                containerColor = AppColors.SurfaceEmphasis,
-                contentColor = AppColors.TextPrimary
-            )
-        ) {
-            Text(stringResource(R.string.stream_url_copy))
         }
         TvButton(
             onClick = onCast,
@@ -665,8 +628,6 @@ fun EpisodeItem(
     episode: Episode,
     fallbackImageUrl: String? = null,
     onClick: () -> Unit,
-    onCopyUrl: () -> Unit,
-    onDownload: () -> Unit,
     onCast: () -> Unit,
     isCasting: Boolean
 ) {
@@ -690,41 +651,17 @@ fun EpisodeItem(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            TvButton(
-                onClick = onDownload,
-                colors = ButtonDefaults.colors(
-                    containerColor = AppColors.SurfaceEmphasis,
-                    contentColor = AppColors.TextPrimary
+        TvButton(
+            onClick = onCast,
+            enabled = !isCasting
+        ) {
+            Text(
+                stringResource(
+                    if (isCasting) R.string.cast_launching else R.string.cast_button_label
                 )
-            ) {
-                Text(stringResource(R.string.download_button_label))
-            }
-            TvButton(onClick = onCopyUrl) {
-                Text(stringResource(R.string.stream_url_copy))
-            }
-            TvButton(
-                onClick = onCast,
-                enabled = !isCasting
-            ) {
-                Text(
-                    stringResource(
-                        if (isCasting) R.string.cast_launching else R.string.cast_button_label
-                    )
-                )
-            }
+            )
         }
     }
-}
-
-private fun copyStreamUrlToClipboard(context: android.content.Context, url: String?) {
-    if (url.isNullOrBlank()) {
-        Toast.makeText(context, context.getString(R.string.stream_url_copy_failed), Toast.LENGTH_SHORT).show()
-        return
-    }
-    context.getSystemService(ClipboardManager::class.java)
-        ?.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.stream_url_clip_label), url))
-    Toast.makeText(context, context.getString(R.string.stream_url_copied), Toast.LENGTH_SHORT).show()
 }
 
 private tailrec fun Context.findMainActivity(): MainActivity? = when (this) {
