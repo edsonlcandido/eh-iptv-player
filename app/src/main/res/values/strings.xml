@@ -1574,9 +1574,11 @@
 
     
     <string name="settings_privacy">Privacy</string>
-    <string name="settings_privacy_subtitle">Manage watch history and incognito mode.</string>
-    <string name="settings_incognito_mode">Incognito Mode</string>
-    <string name="settings_incognito_mode_subtitle">Don\'t save watch history or recently visited categories while active.</string>
+    <string name="settings_privacy_subtitle">Manage adult content visibility and watch history.</string>
+    <string name="settings_adult_content">Adult Content</string>
+    <string name="settings_adult_content_subtitle">When off, adult content is hidden. When on, adult content is shown but requires a PIN to view.</string>
+    <string name="settings_adult_content_status_hidden">OCULTO</string>
+    <string name="settings_adult_content_status_locked">BLOQUEADO</string>
     <string name="settings_clear_history">Clear Watch History</string>
     <string name="settings_clear_history_subtitle">Wipe all watch progress and recents for all providers.</string>
     <string name="settings_clear_history_confirm">Clear History</string>

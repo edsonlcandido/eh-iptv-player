@@ -4,7 +4,7 @@
 
 Usar este documento como checklist repetível para transformar uma nova cópia do projeto base **StreamVault** em uma build simplificada de revenda chamada **Eh!IPTV**. Execute as fases na ordem, confirme cada item e só marque a fase como concluída após a verificação correspondente.
 
-Este roteiro consolida as alterações implementadas até o commit atual (branch `ehiptv/custom-and-simplify`), com Reprodução enxuto e categorias ocultas. A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
+Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail e a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico. A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
 
 ## Quando usar
 
@@ -121,6 +121,30 @@ Arquivo principal: `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/Settin
 - [ ] `SettingsScreen.kt` não força mais `dialogState.selectedCategory = 5` no caminho de import inicial; a inspeção de backup segue acontecendo, mas sem selecionar uma categoria oculta.
 - [ ] Strings das categorias ocultas (`settings_browsing`, `settings_recording_title`, `settings_backup_restore`, `EPG Sources`) podem permanecer em `strings.xml` para evitar impacto em outros consumidores.
 
+## Fase 4d — Privacidade enxuta (somente Conteúdo adulto + Limpar histórico)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsPrivacySection.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsUiStateModel.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsViewModel.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsContentPane.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsPreferenceSnapshotMapper.kt`
+- `app/src/main/res/values/strings.xml` e `values-pt/strings.xml`
+
+- [ ] A categoria `Privacidade` mostra apenas o toggle `Conteúdo adulto` e o card `Limpar histórico de visualização`. **Não há** item de configuração manual de PIN — o PIN padrão `0000` é fixo e gravado automaticamente na primeira ativação.
+- [ ] O toggle `Conteúdo adulto` (chave `settings_adult_content`) controla um único `Switch` que altera `viewModel.setAdultContentEnabled(...)`.
+- [ ] Quando o toggle está **desligado**, a área à direita do título mostra `OCULTO` (chave `settings_adult_content_status_hidden`) e o nível de proteção (`parentalControlLevel`) é `3` (HIDDEN) — o conteúdo adulto não aparece em nenhuma lista do app.
+- [ ] Quando o toggle está **ligado**, a área à direita do título mostra `BLOQUEADO` (chave `settings_adult_content_status_locked`) e o nível de proteção é `1` (LOCKED) — o conteúdo adulto aparece nas listas, mas exige o PIN para abrir cada categoria.
+- [ ] Na primeira ativação, o app grava o PIN padrão `0000` (constante `DEFAULT_ADULT_CONTENT_PIN` em `SettingsViewModel.kt`) e marca `hasParentalPin = true`. Ativações subsequentes preservam o PIN já configurado pelo usuário.
+- [ ] O literal `0000` nunca é exibido na interface. O subtitle do toggle descreve apenas a função, sem mencionar o PIN.
+- [ ] O item `Limpar histórico de visualização` continua abrindo o diálogo existente (`showClearHistoryDialog`) que chama `viewModel.clearHistory()`.
+- [ ] Não devem ser renderizados em `settingsPrivacySection(...)`: `ParentalControlCard` (níveis OFF/LOCKED/PRIVATE/HIDDEN + alterar PIN), toggles de Incógnito, Xtream name-based adult detection e Xtream Base64 compatibility, e qualquer item de "Configurar PIN" / "Alterar PIN" para o PIN adulto.
+- [ ] Strings e funções legadas (`settings_incognito_mode`, `settings_xtream_text_classification`, `settings_xtream_base64_compatibility`, `toggleIncognitoMode`, `toggleXtreamTextClassification`, `toggleXtreamBase64TextCompatibility`, `ParentalControlCard`, `ParentalAction`) podem permanecer no código desde que não sejam referenciadas pela seção de Privacidade. Outros consumidores não devem quebrar.
+- [ ] `SettingsPreferenceSnapshotMapper.kt` define `adultContentEnabled = parentalControlLevel == 1 || parentalControlLevel == 2` (LOCKED ou PRIVATE — em ambos o conteúdo adulto aparece e exige PIN). Toggle OFF ↔ nível 3 (HIDDEN); toggle ON ↔ nível 1 (LOCKED).
+- [ ] `SettingsViewModel.kt` define as constantes `PARENTAL_LEVEL_LOCKED = 1` e `PARENTAL_LEVEL_HIDDEN = 3` para que `setAdultContentEnabled(true)` mapeie para LOCKED e `setAdultContentEnabled(false)` mapeie para HIDDEN.
+- [ ] A assinatura pública de `settingsPrivacySection(...)` foi enxugada para apenas `uiState`, `viewModel` e `onShowClearHistoryDialogChange`. Os callbacks `onShowPinDialogChange`/`onPendingActionChange` foram removidos do call-site em `SettingsContentPane`.
+- [ ] Strings em `values/strings.xml`: `settings_adult_content`, `settings_adult_content_subtitle`, `settings_adult_content_status_hidden` (= `OCULTO`), `settings_adult_content_status_locked` (= `BLOQUEADO`). Em `values-pt/strings.xml`: as traduções equivalentes em português. As strings `settings_adult_content_status_configured`/`settings_adult_content_status_configure`/`settings_adult_content_configure_pin`/`settings_adult_content_configure_pin_subtitle` e qualquer menção visível a `0000` foram removidas.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -185,6 +209,11 @@ adb -s d1d1b8f3 install -r app/build/outputs/apk/debug/app-debug.apk
 8. Salve credenciais pelo formulário de Configurações e confirme que o provedor aparece.
 8.1. Abra a categoria `Reprodução` e confirme que ela mostra apenas `Live stream format` e o card de teste de velocidade.
 8.2. Confirme que o rail lateral só lista `Eh!IPTV`, `Reprodução`, `Privacidade` e `Sobre`. As categorias de Navegação, Gravação, Backup e EPG sources não devem aparecer.
+8.3. Abra a categoria `Privacidade` e confirme que ela mostra apenas o toggle `Conteúdo adulto` e o item `Limpar histórico`. Não deve haver nenhuma linha de configuração manual de PIN.
+8.4. Com o toggle desligado, confirme que o status lateral é `OCULTO` (nível 3, conteúdo adulto não aparece em nenhuma lista). Ligue o toggle e confirme que o status passa para `BLOQUEADO` (nível 1, conteúdo adulto aparece mas exige PIN). O literal `0000` jamais aparece em tela.
+8.5. Com o toggle ligado (BLOQUEADO), abra a lista de Live TV e confirme que as categorias adultas aparecem. Toque em uma delas e confirme que o app exige o PIN configurado antes de abrir o conteúdo.
+8.6. Ligue o toggle pela primeira vez após `pm clear` e verifique via `adb shell run-as` que `hasParentalPin` ficou `true`. Tente acessar uma categoria adulta no app e confirme que ela só abre após digitar o PIN.
+8.7. Abra o diálogo `Limpar histórico` e confirme que ele dispara `viewModel.clearHistory()`.
 9. Verifique o banco após o login:
 
 ```bash
@@ -226,6 +255,13 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 | Xiaomi recusa instalação | Habilite `Instalar via USB` nas opções do desenvolvedor do aparelho. |
 | Reprodução mostra toggles extras | Verifique `SettingsPlaybackSection.kt`; apenas `Live stream format` e `InternetSpeedTestCard` devem ser emitidos. |
 | Rail mostra categorias ocultas | Remova as entradas de `SettingsNavigationRail.kt` e ajuste o `if/else` em `SettingsContentPane.kt` para os índices restantes. |
+| Privacidade mostra ParentalControlCard ou toggles de Incógnito/Xtream | Reescreva `SettingsPrivacySection.kt` para emitir apenas `AdultContentToggleRow` (Compose local) e o card `Limpar histórico`; apague as chamadas a `toggleIncognitoMode`, `toggleXtreamTextClassification` e `toggleXtreamBase64TextCompatibility`. |
+| PIN padrão não é definido ao ligar o toggle | Garanta que `setAdultContentEnabled(true)` chama `preferencesRepository.setParentalPin("0000")` na primeira vez e ajusta `parentalControlLevel` para `3`. |
+| Toggle e status visual não sincronizam | Verifique `SettingsPreferenceSnapshotMapper.kt`: `adultContentEnabled` deve ser `parentalControlLevel == 1 || == 2` (LOCKED/PRIVATE). |
+| Status lateral mostra `OCULTO`/`BLOQUEADO` invertido | Confirme `settings_adult_content_status_hidden` (= `OCULTO`) e `settings_adult_content_status_locked` (= `BLOQUEADO`) em `strings.xml`/`values-pt`, e que `AdultContentToggleRow` lê `locked` quando o toggle está ligado. |
+| Conteúdo adulto não exige PIN quando BLOQUEADO | Confirme `setAdultContentEnabled(true)` chama `setParentalControlLevel(PARENTAL_LEVEL_LOCKED)` (1). O fluxo de PIN em listas/categorias deve continuar exigindo o PIN já configurado. |
+| Aparece item "Configurar PIN" na Privacidade | Não deve haver nenhum item para alterar o PIN do conteúdo adulto. Remova `AdultContentConfigurePinRow` e os callbacks `onShowPinDialogChange`/`onPendingActionChange` da assinatura de `settingsPrivacySection(...)`. |
+| Literal `0000` aparece na tela de Privacidade | A `subtitle` do toggle não pode mencionar o PIN. Remova qualquer referência a `0000` da `settings_adult_content_subtitle`. |
 
 ## Não fazer
 
@@ -235,6 +271,7 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 - Não reintroduzir Combined M3U na tela de Configurações sem decisão explícita do produto.
 - Não reintroduzir categorias do rail (Navegação, Gravação, Backup, EPG sources) sem revisar este roteiro.
 - Não reintroduzir toggles extras de Reprodução além de `Live stream format` e teste de velocidade sem revisar este roteiro.
+- Não reintroduzir o `ParentalControlCard` nem os toggles de Incógnito / Xtream name-based adult detection / Xtream Base64 na seção Privacidade sem revisar este roteiro.
 - Não remover a autenticação do `ValidateAndAddProvider`.
 - Não bloquear o Welcome aguardando o catálogo inteiro.
 - Não commitar credenciais de cliente.

@@ -1088,9 +1088,11 @@
     <string name="multiview_thermal_critical">Crítico</string>
     <string name="multiview_low_memory_warning">A pressão de memória está alta. Os slots extras ficam em espera até a reprodução estabilizar.</string>
     <string name="settings_privacy">Privacidade</string>
-    <string name="settings_privacy_subtitle">Gerencie o histórico de visualização e o modo anônimo.</string>
-    <string name="settings_incognito_mode">Modo anônimo</string>
-    <string name="settings_incognito_mode_subtitle">Não salva o histórico de visualização nem as categorias visitadas recentemente enquanto estiver ativo.</string>
+    <string name="settings_privacy_subtitle">Gerencie a visibilidade do conteúdo adulto e o histórico de visualização.</string>
+    <string name="settings_adult_content">Conteúdo adulto</string>
+    <string name="settings_adult_content_subtitle">Quando desativado, o conteúdo adulto fica oculto. Quando ativado, o conteúdo adulto aparece, mas exige um PIN para ser acessado.</string>
+    <string name="settings_adult_content_status_hidden">OCULTO</string>
+    <string name="settings_adult_content_status_locked">BLOQUEADO</string>
     <string name="settings_clear_history">Limpar histórico de visualização</string>
     <string name="settings_clear_history_subtitle">Apaga todo o progresso de visualização e os itens recentes de todos os provedores.</string>
     <string name="settings_clear_history_confirm">Limpar histórico</string>

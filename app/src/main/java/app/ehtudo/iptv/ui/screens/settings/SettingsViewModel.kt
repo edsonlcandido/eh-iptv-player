@@ -97,8 +97,14 @@ import javax.inject.Inject
 
 private const val BACKGROUND_INDEX_STATUS_PREFIX = "Background index:"
 private const val QUICK_XTREAM_URL = "http://dnstv.top/"
+
 private const val QUICK_XTREAM_PROVIDER_NAME = "Eh! IPTV"
 
+private const val DEFAULT_ADULT_CONTENT_PIN = "0000"
+
+private const val PARENTAL_LEVEL_LOCKED = 1
+
+private const val PARENTAL_LEVEL_HIDDEN = 3
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModel @Inject constructor(
@@ -499,6 +505,23 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             preferencesRepository.setParentalControlLevel(level)
         }
+    }
+
+    fun setAdultContentEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            if (enabled) {
+                if (!preferencesRepository.hasParentalPin.first()) {
+                    preferencesRepository.setParentalPin(DEFAULT_ADULT_CONTENT_PIN)
+                }
+                preferencesRepository.setParentalControlLevel(PARENTAL_LEVEL_LOCKED)
+            } else {
+                preferencesRepository.setParentalControlLevel(PARENTAL_LEVEL_HIDDEN)
+            }
+            _uiState.update { it.copy(adultContentEnabled = enabled) }
+        }
+    }
+
+    companion object {
     }
 
     fun setAppLanguage(language: String) {

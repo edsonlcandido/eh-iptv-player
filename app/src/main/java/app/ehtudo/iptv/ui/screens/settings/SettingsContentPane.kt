@@ -66,10 +66,6 @@ internal fun SettingsContentPane(
             settingsPrivacySection(
                 uiState = uiState,
                 viewModel = viewModel,
-                onPendingProtectionLevelChange = { dialogState.pendingProtectionLevel = it },
-                onPendingActionChange = { dialogState.pendingAction = it },
-                onShowPinDialogChange = { dialogState.showPinDialog = it },
-                onShowLevelDialogChange = { dialogState.showLevelDialog = it },
                 onShowClearHistoryDialogChange = { dialogState.showClearHistoryDialog = it }
             )
         } else if (dialogState.selectedCategory == 3) {

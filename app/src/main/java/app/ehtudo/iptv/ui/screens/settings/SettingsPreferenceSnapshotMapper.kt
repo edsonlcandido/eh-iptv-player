@@ -7,6 +7,7 @@ internal fun SettingsUiState.applyPreferenceSnapshot(snapshot: SettingsPreferenc
         activeProviderId = snapshot.activeProviderId,
         parentalControlLevel = snapshot.parentalControlLevel,
         hasParentalPin = snapshot.hasParentalPin,
+        adultContentEnabled = snapshot.parentalControlLevel == 1 || snapshot.parentalControlLevel == 2,
         appLanguage = snapshot.appLanguage,
         appLandingDestination = snapshot.appLandingDestination,
         appTopLevelDestinations = snapshot.appTopLevelDestinations,

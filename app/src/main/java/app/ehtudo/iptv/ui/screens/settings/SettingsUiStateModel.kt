@@ -72,6 +72,7 @@ data class SettingsUiState(
     val databaseMaintenance: DatabaseMaintenanceUiModel? = null,
     val parentalControlLevel: Int = 0,
     val hasParentalPin: Boolean = false,
+    val adultContentEnabled: Boolean = false,
     val appLanguage: String = "system",
     val appLandingDestination: AppLandingDestination = AppLandingDestination.LIVE_TV,
     val appTopLevelDestinations: List<AppTopLevelDestination> = AppTopLevelDestination.defaultOrder,
