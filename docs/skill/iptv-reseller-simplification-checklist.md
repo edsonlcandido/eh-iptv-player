@@ -4,7 +4,7 @@
 
 Usar este documento como checklist repetível para transformar uma nova cópia do projeto base **StreamVault** em uma build simplificada de revenda chamada **Eh!IPTV**. Execute as fases na ordem, confirme cada item e só marque a fase como concluída após a verificação correspondente.
 
-Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail, a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico, a seção Sobre limitada a Versão/Site/Agradecimento, a Fase 4f (VOD enxuto em Filmes e Séries) e a Fase 4g (Detalhes VOD enxutos — somente Play/Chromecast/Favorito/Trailer). A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
+Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail, a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico, a seção Sobre limitada a Versão/Site/Agradecimento, a Fase 4f (VOD enxuto em Filmes e Séries), a Fase 4g (Detalhes VOD enxutos — somente Play/Chromecast/Favorito/Trailer), a Fase 4h (Player VOD enxuto — sem Quality/Audio/Stop Playback/Standby/PiP, e `Elenco` → `Transmissão` em PT) e a Fase 4i (Player IPTV enxuto — sem Subs/Audio/Rec/C-UP/Split/PiP; `Subscritores` → `Legendas`; `Transmissão` → `Chromecast` em PT). A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
 
 ## Quando usar
 
@@ -199,6 +199,56 @@ Arquivos principais:
 - [ ] `MovieDetailViewModelCastingTest` e `SeriesDetailViewModelCastingTest` continuam passando (`./gradlew :app:testDebugUnitTest --no-daemon`). Esta fase não altera a superfície do ViewModel, então não há testes novos.
 - [ ] Strings (`stream_url_copy`, `download_button_label`, `stream_url_clip_label`, `stream_url_copied`, `stream_url_copy_failed`) podem permanecer em `values/strings.xml` e `values-pt/strings.xml` — outros fluxos (ex.: `AddToGroupDialog`, `ContinueWatching`) podem referenciá-las futuramente.
 
+## Fase 4h — Player VOD enxuto (somente ações essenciais no overlay de Filmes/Séries)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/overlay/PlayerControlsChrome.kt` (apenas o composable privado `PlayerVodInfo` e o call-site que o invoca a partir de `PlayerBottomBar`).
+- `app/src/main/res/values-pt/strings.xml`.
+
+- [ ] A linha de ações rápidas do **player de Filmes/Séries** (`PlayerVodInfo`) mostra, nesta ordem: `Mute/Unmute` → `Legendas` (se `subtitleTrackCount > 0`) → `Episódios` (se `showEpisodesAction`, apenas séries) → `External Player` (se `showExternalPlayerAction`) → `Velocidade` (sempre) → `A/V Sync` (se `audioVideoSyncEnabled && !isCastConnected`) → `Transmissão`/`Parar Transmissão` (sempre) → `Proporção (Fit/Stretch/Zoom)` (sempre).
+- [ ] Os botões **Qualidade de vídeo**, **Áudio**, **Parar reprodução após**, **Permitir standby após inatividade** e **Imagem em imagem** **não** aparecem no player VOD. O servidor Xtream Eh! IPTV não fornece múltiplas trilhas de áudio/vídeo nem usa esses timers; PiP também foi removido para evitar gravação fora do app.
+- [ ] O parâmetro `sleepTimerUiState` foi removido de `PlayerVodInfo` (não há mais timer visível). `PlayerBottomBar` e `PlayerControlsOverlay` continuam recebendo `sleepTimerUiState` para uso do `PlayerLiveInfo` (Live TV não foi alterado nesta fase).
+- [ ] Os parâmetros removidos de `PlayerVodInfo`: `audioTrackCount`, `videoQualityCount`, `sleepTimerUiState`, `onOpenAudioTracks`, `onOpenVideoTracks`, `onOpenStopPlaybackTimer`, `onOpenIdleStandbyTimer`, `onEnterPictureInPicture`. O call-site em `PlayerBottomBar` foi ajustado removendo apenas esses argumentos — `PlayerBottomBar` ainda os aceita para repassar ao `PlayerLiveInfo`.
+- [ ] Tradução PT corrigida: `player_cast` e `player_action_cast` em `values-pt/strings.xml` mudaram de `Elenco` (que significa "elenco de atores") para `Transmissão` (termo correto para o recurso de cast/Chromecast). A variante EN permanece `Cast`/`Chromecast`. A variante `values-es/strings.xml` ainda tem `Elenco` mas não foi corrigida nesta fase (PT é o locale principal do revendedor).
+- [ ] **Ressalva importante:** o `MainActivity.onUserLeaveHint()` (`app/src/main/java/app/ehtudo/iptv/MainActivity.kt:210-213`) ainda tenta entrar em PiP automaticamente quando o usuário sai do app durante a reprodução. Esta fase remove apenas o **botão** de PiP, não o comportamento automático. Removê-lo de fato exige mudar o manifesto, `MainActivity` e `enterPlayerPictureInPictureModeIfEligible` — fora do escopo desta fase.
+- [ ] **Ressalva Live TV:** os mesmos botões (`Áudio`, `Qualidade`, `Stop Playback`, `Standby`, `PiP`) continuam aparecendo no overlay de Live TV (`PlayerLiveInfo` em `PlayerControlsChrome.kt:786-836` e no `PlayerChannelInfoOverlay`). Esta fase toca **somente** Filmes/Séries. Para aplicar a Live TV, abrir uma nova fase.
+- [ ] `viewModel.selectAudioTrack(...)`, `viewModel.selectVideoQuality(...)`, `viewModel.setStopPlaybackTimer(...)`, `viewModel.setIdleStandbyTimer(...)`, `viewModel.enterPictureInPicture(...)` continuam existindo nos ViewModels/Actions. Esta fase remove apenas a UI — as APIs permanecem disponíveis.
+- [ ] Build `:app:compileDebugKotlin` e `:app:testDebugUnitTest` passam.
+
+## Fase 4i — Player IPTV enxuto (Channel Info + Live controls sem Subs/Audio/Rec/C-UP/Split/PiP)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/overlay/PlayerChannelInfoOverlay.kt` — função `ChannelInfoOverlay`.
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/overlay/PlayerControlsChrome.kt` — função privada `PlayerLiveInfo` (Live branch do `PlayerBottomBar`).
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/PlayerScreen.kt` — call-site de `ChannelInfoOverlay`.
+- `app/src/main/res/values-pt/strings.xml`.
+
+`ChannelInfoOverlay` (overlay que abre ao tocar/pressionar INFO em Live TV):
+
+- [ ] Removidos do `LazyRow` de quick actions: `Subs` (R.string.player_subs), `Audio` (R.string.player_audio), `Split Screen/Multiview` (R.string.player_multiview_short / R.string.player_action_split), `REC` (botão com `icon="REC"`), `C-UP` (botão com `icon="C-UP"` + `R.string.player_catchup_badge`) e `PiP` (R.string.player_pip_short).
+- [ ] Removidos os painéis `ChannelInfoPanel.RECORD` e `ChannelInfoPanel.CATCH_UP` (não há mais botão que os acione). O enum `ChannelInfoPanel` agora só tem `LIVE_DVR`.
+- [ ] Removidos `recordButtonFocusRequester`, `recordPanelFocusRequester`, `catchUpButtonFocusRequester`, `catchUpPanelFocusRequester` e suas referências no composable.
+- [ ] Removidos os parâmetros da assinatura: `currentRecordingStatus`, `onStartRecording`, `onStopRecording`, `onScheduleRecording`, `onScheduleDailyRecording`, `onScheduleWeeklyRecording`, `onRestartProgram`, `onOpenArchive`, `onOpenSplitScreen`, `subtitleTrackCount`, `liveTranslationAvailable`, `audioTrackCount`, `onOpenSubtitleTracks`, `onOpenAudioTracks`, `onEnterPictureInPicture`. Os pills de status `RecordingStatus.RECORDING`/`SCHEDULED` no header também saíram (não há mais gravação no app pelo IPTV player). Pill `R.string.player_catchup_badge` no header também removido (não há mais catch-up).
+- [ ] Call-site em `PlayerScreen.kt:1306` ajustado removendo os argumentos correspondentes.
+- [ ] Removidos imports `archivePlaybackCapability`, `isArchivePlayable`, `RecordingStatus` (não há mais referências no composable).
+
+`PlayerLiveInfo` (Live branch do `PlayerBottomBar`, controles completos de Live TV):
+
+- [ ] Removido `Picture in picture` da primary actions list.
+- [ ] Removidos `Subs`, `Audio`, `Video Quality` e `Multiview/Split Screen` da secondary actions list. A secondary list agora contém apenas `Aspect Ratio` e (condicional) `A/V Sync`.
+- [ ] Removidos da assinatura de `PlayerLiveInfo`: `subtitleTrackCount`, `liveTranslationAvailable`, `audioTrackCount`, `videoQualityCount`, `onOpenSubtitleTracks`, `onOpenAudioTracks`, `onOpenVideoTracks`, `onOpenSplitScreen`, `onEnterPictureInPicture`. Call-site em `PlayerBottomBar` ajustado.
+
+Strings (`values-pt/strings.xml`):
+
+- [ ] `player_subs` corrigido de `Subscritores` para `Legendas`. Em PT, `player_subs` significa legendas do vídeo, não "subscribers". As variantes EN permanecem como `Subs`.
+- [ ] `player_cast` e `player_action_cast` ajustados de `Transmissão` (definido na Fase 4h) para `Chromecast` (nome de marca usado em todos os locales, igual a `R.string.cast_button_label`). Mantém-se `player_stop_casting` = `Pare de transmitir` (PT) por consistência com a Fase 4h.
+- [ ] EN `player_cast` permanece como `Cast` e `player_action_cast` permanece como `Cast` (o usuário pediu apenas para corrigir o termo PT).
+
+Resíduo intencional fora do escopo desta fase:
+
+- `MainActivity.onUserLeaveHint()` (PiP automático quando o usuário sai do app durante a reprodução) continua ativo. Removê-lo exige mudar o manifesto, `MainActivity` e `enterPlayerPictureInPictureModeIfEligible`.
+- ViewModels/Actions para gravação (`viewModel.startManualRecording()`, `viewModel.stopCurrentRecording()`, `viewModel.scheduleRecording()`, etc.) continuam existindo, mas não são mais expostos pela UI.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -322,6 +372,11 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 | Foco não cai em nenhum card ao entrar em Filmes/Séries | Confirme que `Modifier.focusRequester(initialFocusRequester)` está sendo anexado ao primeiro card de `favorites_row` via `.then(if (movie.id == fallbackMovieId) Modifier.focusRequester(initialFocusRequester) else Modifier)` e que `fallbackMovieId` não está `null`. Garanta que `FocusRestoreHost` ainda chama `initialContentFocusRequester.requestFocusSafely(...)`. |
 | Botões `Copy URL` ou `Download` reaparecem nos detalhes VOD | Verifique `MovieDetailScreen.kt` (ação do filme), `SeriesDetailActions` (ação da série) e `EpisodeItem` (episódios). Em nenhum dos três deve haver `TvButton` lendo `R.string.stream_url_copy` ou `R.string.download_button_label`. A linha da série deve manter `Play`/`Resume · …`, `Chromecast` e o coração; cada episódio mantém apenas `Chromecast`. |
 | Detalhes do filme não focam no botão Play | Confirme que `MovieDetailHeroText` continua invocando `TvButton(onClick = onPlay, modifier = Modifier.focusRequester(playButtonFocusRequester), …)` e que `LaunchedEffect(movie.id) { playButtonFocusRequester.requestFocusSafely(...) }` permanece em `MovieDetailContent`. |
+| Botões `Qualidade`, `Áudio`, `Parar reprodução`, `Standby` ou `PiP` reaparecem no player VOD | Verifique `PlayerControlsChrome.kt:PlayerVodInfo` (a action list começa em `PlayerActionsChrom.kt:1063` após a Fase 4h). Nenhum `add(PlayerActionSpec(...))` deve referenciar `R.string.player_video_quality`, `R.string.player_audio`, `R.string.player_stop_playback_after`, `R.string.player_idle_standby_after` ou `R.string.player_picture_in_picture`. Live TV ainda tem esses botões — é intencional fora do escopo da Fase 4h. |
+| Botão Cast mostra `Elenco` em português | Confirme `values-pt/strings.xml:805` (`player_action_cast` = `Chromecast`) e `:810` (`player_cast` = `Chromecast`). Se algum outro locale (`values-es`, etc.) ainda diz `Elenco`, foi deixado como está nesta fase. |
+| Botão `Subs` mostra `Subscritores` em português | Confirme `values-pt/strings.xml:802` (`player_subs` = `Legendas`). `Elenco` e `Subscritores` foram traduzidos errados na Fase 4h e na Fase 4i respectivamente. |
+| Botões `Subs`, `Audio`, `Rec`, `C-UP`, `Split` ou `PiP` reaparecem no Channel Info Overlay | Verifique `PlayerChannelInfoOverlay.kt` (LazyRow em torno da linha 380). Nenhum `QuickActionButton` deve referenciar `R.string.player_subs`, `R.string.player_audio`, `R.string.player_multiview_short`, `R.string.player_catchup_badge`, `R.string.player_pip_short` nem usar `icon="REC"` ou `icon="C-UP"`. O enum `ChannelInfoPanel` deve ter apenas `LIVE_DVR`. |
+| Botões `Subs`, `Audio`, `Split` ou `PiP` reaparecem no overlay Live completo | Verifique `PlayerLiveInfo` em `PlayerControlsChrome.kt`: primary actions não devem ter `Picture in picture`; secondary actions não devem ter `Subs`, `Audio`, `Video Quality` nem `Multiview`. |
 
 ## Não fazer
 
@@ -335,6 +390,10 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 - Não reintroduzir Atualizações automáticas, Crash Reports, Build info, GitHub ou Doações na seção Sobre sem revisar este roteiro.
 - Não reintroduzir o `hero` strip (`VodHeroStrip`) nem a linha de pílulas (`VodActionChipRow` com `browse_all`/`categories`/`favorites`/`resume`/`top_rated`/`fresh`) no topo das páginas de Filmes e Séries (modo preview) sem revisar este roteiro.
 - Não reintroduzir `Copy URL` ou `Download` nas linhas de ação de `MovieDetailScreen`, `SeriesDetailActions` (ação da série) ou `EpisodeItem` sem revisar este roteiro. Cada ação da série/detalhe do filme deve manter apenas Play/Resume, Chromecast e Favorito (e Trailer no filme quando houver); cada episódio mantém apenas Chromecast.
+- Não reintroduzir `Qualidade do vídeo`, `Áudio`, `Parar reprodução após`, `Permitir standby após inatividade` ou `Imagem em imagem` no player VOD (`PlayerVodInfo` em `PlayerControlsChrome.kt`) sem revisar este roteiro. Live TV não foi tocado nesta fase — para remover também em Live, abrir nova fase.
+- Não reintroduzir o termo `Elenco` para o botão de Cast/Chromecast em `values-pt/strings.xml` — o termo correto é `Chromecast` (literal, como `cast_button_label`). Ver `player_cast` e `player_action_cast`.
+- Não reintroduzir `Subscritores` em `player_subs` em `values-pt/strings.xml` — o termo correto é `Legendas`.
+- Não reintroduzir os botões `Subs`, `Audio`, `Rec`, `C-UP`, `Split Screen` ou `PiP` no `ChannelInfoOverlay`/`PlayerLiveInfo` (Fase 4i) sem revisar este roteiro. O enum `ChannelInfoPanel` deve continuar com apenas `LIVE_DVR`.
 - Não remover a autenticação do `ValidateAndAddProvider`.
 - Não bloquear o Welcome aguardando o catálogo inteiro.
 - Não commitar credenciais de cliente.

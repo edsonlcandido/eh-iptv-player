@@ -1320,30 +1320,6 @@ fun PlayerScreen(
                         viewModel.closeChannelInfoOverlay()
                         viewModel.openLastVisitedCategory()
                     },
-                    currentRecordingStatus = currentChannelRecording?.status,
-                    onStartRecording = {
-                        notificationPermissionGate.runRecordingAction {
-                            viewModel.startManualRecording()
-                        }
-                    },
-                    onStopRecording = viewModel::stopCurrentRecording,
-                    onScheduleRecording = {
-                        notificationPermissionGate.runRecordingAction {
-                            viewModel.scheduleRecording()
-                        }
-                    },
-                    onScheduleDailyRecording = {
-                        notificationPermissionGate.runRecordingAction {
-                            viewModel.scheduleDailyRecording()
-                        }
-                    },
-                    onScheduleWeeklyRecording = {
-                        notificationPermissionGate.runRecordingAction {
-                            viewModel.scheduleWeeklyRecording()
-                        }
-                    },
-                    onRestartProgram = { viewModel.restartCurrentProgram() },
-                    onOpenArchive = { showProgramHistory = true },
                     onToggleAspectRatio = { viewModel.toggleAspectRatio() },
                     onToggleDiagnostics = { viewModel.toggleDiagnostics() },
                     onTogglePlayPause = { if (isPlaying) viewModel.pause() else viewModel.play() },
@@ -1353,21 +1329,14 @@ fun PlayerScreen(
                     isPlaying = isPlaying,
                     currentAspectRatio = aspectRatio.modeName,
                     isDiagnosticsEnabled = showDiagnostics,
-                    onOpenSplitScreen = { showSplitDialog = true },
-                    subtitleTrackCount = availableSubtitleTracks.size,
-                    liveTranslationAvailable = liveTranslationAvailable,
-                    audioTrackCount = availableAudioTracks.size,
                     videoQualityCount = availableVideoQualities.size,
                     channelVariantCount = currentChannel?.variants?.size ?: 0,
                     isMuted = isMuted,
                     onToggleMute = viewModel::toggleMute,
-                    onOpenSubtitleTracks = { showTrackSelection = TrackType.TEXT },
-                    onOpenAudioTracks = { showTrackSelection = TrackType.AUDIO },
                     onOpenVideoTracks = { showTrackSelection = TrackType.VIDEO },
                     onOpenVariants = { showVariantSelection = true },
                     onOpenAudioVideoSync = { showAudioVideoOffsetDialog = true },
                     audioVideoSyncEnabled = audioVideoSyncEnabled,
-                    onEnterPictureInPicture = enterPictureInPicture,
                     isCastConnected = castConnectionState == CastConnectionState.CONNECTED,
                     onCast = { viewModel.castCurrentMedia { mainActivity?.openCastRouteChooser() } },
                     onStopCasting = viewModel::stopCasting,
