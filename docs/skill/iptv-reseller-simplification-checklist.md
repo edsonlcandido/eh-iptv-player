@@ -4,7 +4,7 @@
 
 Usar este documento como checklist repetível para transformar uma nova cópia do projeto base **StreamVault** em uma build simplificada de revenda chamada **Eh!IPTV**. Execute as fases na ordem, confirme cada item e só marque a fase como concluída após a verificação correspondente.
 
-Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail, a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico, a seção Sobre limitada a Versão/Site/Agradecimento, a Fase 4f (VOD enxuto em Filmes e Séries), a Fase 4g (Detalhes VOD enxutos — somente Play/Chromecast/Favorito/Trailer), a Fase 4h (Player VOD enxuto — sem Quality/Audio/Stop Playback/Standby/PiP, e `Elenco` → `Transmissão` em PT) e a Fase 4i (Player IPTV enxuto — sem Subs/Audio/Rec/C-UP/Split/PiP; `Subscritores` → `Legendas`; `Transmissão` → `Chromecast` em PT). A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
+Este roteiro consolida as alterações implementadas até o commit atual (`57da4be simplificado configurações`, branch `ehiptv/custom-and-simplify`), com Reprodução enxuta, categorias ocultas no rail, a seção Privacidade reduzida ao toggle de Conteúdo adulto + Limpar histórico, a seção Sobre limitada a Versão/Site/Agradecimento, a Fase 4f (VOD enxuto em Filmes e Séries), a Fase 4g (Detalhes VOD enxutos — somente Play/Chromecast/Favorito/Trailer), a Fase 4h (Player VOD enxuto — sem Quality/Audio/Stop Playback/Standby/PiP, e `Elenco` → `Transmissão` em PT), a Fase 4i (Player IPTV enxuto — sem Subs/Audio/Rec/C-UP/Split/PiP; `Subscritores` → `Legendas`; `Transmissão` → `Chromecast` em PT) e a Fase 4j (ChannelInfoOverlay sem Quality no Live TV). A versão anterior estava alinhada até `817d3c9` (`Campo provedores alterado para Eh! IPTV`).
 
 ## Quando usar
 
@@ -249,6 +249,18 @@ Resíduo intencional fora do escopo desta fase:
 - `MainActivity.onUserLeaveHint()` (PiP automático quando o usuário sai do app durante a reprodução) continua ativo. Removê-lo exige mudar o manifesto, `MainActivity` e `enterPlayerPictureInPictureModeIfEligible`.
 - ViewModels/Actions para gravação (`viewModel.startManualRecording()`, `viewModel.stopCurrentRecording()`, `viewModel.scheduleRecording()`, etc.) continuam existindo, mas não são mais expostos pela UI.
 
+## Fase 4j — ChannelInfoOverlay sem Quality (Live TV player)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/overlay/PlayerChannelInfoOverlay.kt` — função `ChannelInfoOverlay`.
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/player/PlayerScreen.kt` — call-site de `ChannelInfoOverlay`.
+
+- [ ] Removido do `LazyRow` de quick actions do `ChannelInfoOverlay`: `Quality` (`R.string.player_quality_short` + `R.string.player_action_quality`, acionado por `videoQualityCount > 0`). O servidor Xtream Eh! IPTV não fornece múltiplas trilhas de vídeo para Live TV.
+- [ ] Removidos da assinatura do `ChannelInfoOverlay`: `videoQualityCount: Int = 0` e `onOpenVideoTracks: () -> Unit = {}` (eram os únicos consumidores do botão Quality).
+- [ ] Call-site em `PlayerScreen.kt:1306` ajustado removendo os argumentos correspondentes (`videoQualityCount = availableVideoQualities.size` e `onOpenVideoTracks = { showTrackSelection = TrackType.VIDEO }`).
+- [ ] **Resíduo Live TV:** as funções do ViewModel `viewModel.selectVideoQuality(...)` e o caminho `showTrackSelection = TrackType.VIDEO` continuam existindo; o overlay completo `PlayerControlsOverlay` (acessado por INFO/MENU) ainda passa `videoTracks` para o motor do player — apenas o botão da `ChannelInfoOverlay` foi removido.
+- [ ] Build `:app:compileDebugKotlin` passa.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -377,6 +389,7 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 | Botão `Subs` mostra `Subscritores` em português | Confirme `values-pt/strings.xml:802` (`player_subs` = `Legendas`). `Elenco` e `Subscritores` foram traduzidos errados na Fase 4h e na Fase 4i respectivamente. |
 | Botões `Subs`, `Audio`, `Rec`, `C-UP`, `Split` ou `PiP` reaparecem no Channel Info Overlay | Verifique `PlayerChannelInfoOverlay.kt` (LazyRow em torno da linha 380). Nenhum `QuickActionButton` deve referenciar `R.string.player_subs`, `R.string.player_audio`, `R.string.player_multiview_short`, `R.string.player_catchup_badge`, `R.string.player_pip_short` nem usar `icon="REC"` ou `icon="C-UP"`. O enum `ChannelInfoPanel` deve ter apenas `LIVE_DVR`. |
 | Botões `Subs`, `Audio`, `Split` ou `PiP` reaparecem no overlay Live completo | Verifique `PlayerLiveInfo` em `PlayerControlsChrome.kt`: primary actions não devem ter `Picture in picture`; secondary actions não devem ter `Subs`, `Audio`, `Video Quality` nem `Multiview`. |
+| Botão `Quality` reaparece no Channel Info Overlay | Verifique `PlayerChannelInfoOverlay.kt` LazyRow: não deve haver `QuickActionButton` com `R.string.player_quality_short` nem `R.string.player_action_quality`. Os parâmetros `videoQualityCount` e `onOpenVideoTracks` também devem estar ausentes da assinatura de `ChannelInfoOverlay`. |
 
 ## Não fazer
 

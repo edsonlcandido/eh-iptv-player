@@ -82,12 +82,10 @@ fun ChannelInfoOverlay(
     isPlaying: Boolean,
     currentAspectRatio: String,
     isDiagnosticsEnabled: Boolean,
-    videoQualityCount: Int = 0,
     channelVariantCount: Int = 0,
     qualityOptionCount: Int = 0,
     isMuted: Boolean = false,
     onToggleMute: () -> Unit = {},
-    onOpenVideoTracks: () -> Unit = {},
     onOpenVariants: () -> Unit = {},
     onOpenStreamFormats: () -> Unit = {},
     onOpenAudioVideoSync: () -> Unit = {},
@@ -383,16 +381,6 @@ fun ChannelInfoOverlay(
                         onClick = onToggleMute,
                         onInteraction = { handleMainActionFocus(null) }
                     )
-                }
-                if (videoQualityCount > 0) {
-                    item {
-                        QuickActionButton(
-                            icon = stringResource(R.string.player_action_quality),
-                            label = stringResource(R.string.player_quality_short),
-                            onClick = onOpenVideoTracks,
-                            onInteraction = { handleMainActionFocus(null) }
-                        )
-                    }
                 }
                 if (channelVariantCount > 1) {
                     item {
