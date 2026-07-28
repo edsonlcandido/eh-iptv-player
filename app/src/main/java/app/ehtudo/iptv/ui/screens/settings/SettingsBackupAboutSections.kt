@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,7 +20,6 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.ehtudo.iptv.BuildConfig
 import app.ehtudo.iptv.R
-import app.ehtudo.iptv.update.AppUpdateActionState
 import app.ehtudo.iptv.ui.interaction.TvClickableSurface
 import app.ehtudo.iptv.ui.theme.OnSurface
 import app.ehtudo.iptv.ui.theme.OnSurfaceDim
@@ -252,156 +250,26 @@ private fun BackupActionCard(
 }
 
 internal fun LazyListScope.settingsAboutSection(
-    uiState: SettingsUiState,
-    context: Context,
-    buildVerificationLabel: String,
-    onOpenUri: (String) -> Unit,
-    onCheckForUpdates: () -> Unit,
-    onInstallDownloadedUpdate: () -> Unit,
-    onDownloadLatestUpdate: () -> Unit,
-    onSetAutoCheckAppUpdates: (Boolean) -> Unit,
-    onSetAutoDownloadAppUpdates: (Boolean) -> Unit,
-    onRefreshDownloadState: () -> Unit,
-    onViewCrashReport: () -> Unit,
-    onShareCrashReport: () -> Unit,
-    onDeleteCrashReport: () -> Unit
+    onOpenUri: (String) -> Unit
 ) {
     item {
-        val downloadStatus = uiState.appUpdate.downloadStatus
-        LaunchedEffect(downloadStatus) {
-            if (downloadStatus == app.ehtudo.iptv.update.AppUpdateDownloadStatus.Downloading) {
-                while (true) {
-                    kotlinx.coroutines.delay(2000L)
-                    onRefreshDownloadState()
-                }
-            }
-        }
-        SettingsSectionHeader(
-            title = stringResource(R.string.settings_updates_title),
-            subtitle = stringResource(R.string.settings_updates_subtitle)
-        )
-        SettingsRow(label = stringResource(R.string.settings_app_version), value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-        SwitchSettingsRow(
-            label = stringResource(R.string.settings_update_auto_check),
-            value = stringResource(
-                if (uiState.autoCheckAppUpdates) R.string.settings_enabled else R.string.settings_disabled
-            ),
-            checked = uiState.autoCheckAppUpdates,
-            onCheckedChange = onSetAutoCheckAppUpdates
-        )
-        if (uiState.autoCheckAppUpdates) {
-            SwitchSettingsRow(
-                label = stringResource(R.string.settings_update_auto_download),
-                value = stringResource(
-                    if (uiState.autoDownloadAppUpdates) R.string.settings_enabled else R.string.settings_disabled
-                ),
-                checked = uiState.autoDownloadAppUpdates,
-                onCheckedChange = onSetAutoDownloadAppUpdates
-            )
-        }
         SettingsRow(
-            label = stringResource(R.string.settings_update_latest_release),
-            value = formatLatestReleaseLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_status),
-            value = formatUpdateStatusLabel(uiState.appUpdate, context)
-        )
-        SettingsRow(
-            label = stringResource(R.string.settings_update_last_checked),
-            value = formatUpdateCheckTimeLabel(uiState.appUpdate.lastCheckedAt, context)
+            label = stringResource(R.string.settings_app_version),
+            value = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_update_check_now),
-            value = stringResource(
-                if (uiState.isCheckingForUpdates) R.string.settings_update_checking else R.string.settings_update_check_action
-            ),
-            onClick = {
-                if (!uiState.isCheckingForUpdates) {
-                    onCheckForUpdates()
-                }
-            }
-        )
-        if (shouldShowUpdateDownloadAction(uiState.appUpdate)) {
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_download),
-                value = formatUpdateDownloadLabel(uiState.appUpdate, context),
-                onClick = {
-                    when (uiState.appUpdate.latestActionState()) {
-                        AppUpdateActionState.InstallLatest,
-                        AppUpdateActionState.InstallPermissionRequired -> onInstallDownloadedUpdate()
-                        AppUpdateActionState.DownloadLatest -> onDownloadLatestUpdate()
-                        AppUpdateActionState.Downloading,
-                        AppUpdateActionState.None -> Unit
-                    }
-                }
-            )
-        }
-        if (!uiState.appUpdate.releaseUrl.isNullOrBlank()) {
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_update_view_release),
-                value = uiState.appUpdate.latestVersionName ?: stringResource(R.string.settings_update_release_notes),
-                onClick = { onOpenUri(uiState.appUpdate.releaseUrl.orEmpty()) }
-            )
-        }
-        if (!uiState.appUpdate.errorMessage.isNullOrBlank()) {
-            SettingsRow(
-                label = stringResource(R.string.settings_update_error),
-                value = uiState.appUpdate.errorMessage.orEmpty()
-            )
-        }
-    }
-
-    item {
-        SettingsSectionHeader(
-            title = stringResource(R.string.settings_crash_reports_title),
-            subtitle = stringResource(R.string.settings_crash_reports_subtitle)
-        )
-        if (uiState.crashReport.hasReport) {
-            SettingsRow(
-                label = stringResource(R.string.settings_crash_report_latest),
-                value = uiState.crashReport.timestamp
-            )
-            SettingsRow(
-                label = stringResource(R.string.settings_crash_report_exception),
-                value = uiState.crashReport.exception.substringAfterLast('.')
-            )
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_crash_report_view),
-                value = stringResource(R.string.settings_crash_report_available),
-                onClick = onViewCrashReport
-            )
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_crash_report_share),
-                value = uiState.crashReport.fileName,
-                onClick = onShareCrashReport
-            )
-            ClickableSettingsRow(
-                label = stringResource(R.string.settings_crash_report_delete),
-                value = stringResource(R.string.settings_crash_report_delete_value),
-                onClick = onDeleteCrashReport
-            )
-        } else {
-            SettingsRow(
-                label = stringResource(R.string.settings_crash_report_latest),
-                value = stringResource(R.string.settings_crash_report_none)
-            )
-        }
-    }
-
-    item {
-        SettingsRow(label = stringResource(R.string.settings_build), value = stringResource(R.string.settings_build_desc))
-        SettingsRow(label = stringResource(R.string.settings_build_verification), value = buildVerificationLabel)
-        SettingsRow(label = stringResource(R.string.settings_developed_by), value = stringResource(R.string.settings_developer_name))
-        ClickableSettingsRow(
-            label = stringResource(R.string.settings_github),
-            value = stringResource(R.string.settings_github_url),
-            onClick = { onOpenUri(context.getString(R.string.settings_github_url)) }
+            label = stringResource(R.string.settings_site),
+            value = stringResource(R.string.settings_site_url),
+            onClick = { onOpenUri(EH_IPTV_SITE_URL) }
         )
         ClickableSettingsRow(
-            label = stringResource(R.string.settings_donate),
-            value = stringResource(R.string.settings_donate_url),
-            onClick = { onOpenUri(context.getString(R.string.settings_donate_url)) }
+            label = stringResource(R.string.settings_acknowledgment),
+            value = stringResource(R.string.settings_acknowledgment_url),
+            onClick = { onOpenUri(STREAMVAULT_REPO_URL) }
         )
     }
 }
+
+private const val EH_IPTV_SITE_URL = "https://iptv.ehtudo.app/"
+
+private const val STREAMVAULT_REPO_URL = "https://github.com/Davidona/StreamVault-IPTV"

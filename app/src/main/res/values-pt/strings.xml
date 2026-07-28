@@ -403,6 +403,10 @@
     <string name="settings_about">Sobre</string>
     <string name="settings_about_subtitle">Detalhes de versão, compilação e suporte para esta instalação.</string>
     <string name="settings_app_version">Versão do aplicativo</string>
+    <string name="settings_site">Site</string>
+    <string name="settings_site_url">https://iptv.ehtudo.app/</string>
+    <string name="settings_acknowledgment">Agradecimento</string>
+    <string name="settings_acknowledgment_url">https://github.com/Davidona/StreamVault-IPTV</string>
     <string name="settings_build">Construir</string>
     <string name="settings_build_desc">StreamVault para Android TV</string>
     <string name="settings_enabled">Ativado</string>

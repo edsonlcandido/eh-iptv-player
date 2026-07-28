@@ -145,6 +145,22 @@ Arquivos principais:
 - [ ] A assinatura pública de `settingsPrivacySection(...)` foi enxugada para apenas `uiState`, `viewModel` e `onShowClearHistoryDialogChange`. Os callbacks `onShowPinDialogChange`/`onPendingActionChange` foram removidos do call-site em `SettingsContentPane`.
 - [ ] Strings em `values/strings.xml`: `settings_adult_content`, `settings_adult_content_subtitle`, `settings_adult_content_status_hidden` (= `OCULTO`), `settings_adult_content_status_locked` (= `BLOQUEADO`). Em `values-pt/strings.xml`: as traduções equivalentes em português. As strings `settings_adult_content_status_configured`/`settings_adult_content_status_configure`/`settings_adult_content_configure_pin`/`settings_adult_content_configure_pin_subtitle` e qualquer menção visível a `0000` foram removidas.
 
+## Fase 4e — Sobre enxuto (somente Versão, Site e Agradecimento)
+
+Arquivos principais:
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsBackupAboutSections.kt`
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsContentPane.kt`
+- `app/src/main/res/values/strings.xml` e `values-pt/strings.xml`
+
+- [ ] A categoria `Sobre` mostra apenas três linhas: `Versão do aplicativo`, `Site` (clicável) e `Agradecimento` (clicável).
+- [ ] `Versão do aplicativo` exibe `${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})`.
+- [ ] `Site` mostra `https://iptv.ehtudo.app/` e abre o URL no `onOpenUri(...)`. Constante `EH_IPTV_SITE_URL` em `SettingsBackupAboutSections.kt`.
+- [ ] `Agradecimento` mostra `https://github.com/Davidona/StreamVault-IPTV` e abre o URL. Constante `STREAMVAULT_REPO_URL` no mesmo arquivo.
+- [ ] Seções removidas: Atualizações (auto-check, auto-download, latest release, status, last checked, check now, download, view release, error), Crash Reports e Build info (build, build verification, developed by, GitHub, donate).
+- [ ] Assinatura de `settingsAboutSection(...)` foi enxugada para apenas `onOpenUri`. Os callbacks removidos ficam disponíveis na assinatura de `SettingsContentPane` caso outros fluxos queiram reaproveitar, mas nada os referencia após esta fase.
+- [ ] Imports não usados em `SettingsBackupAboutSections.kt` (`LaunchedEffect`, `AppUpdateActionState`) foram removidos.
+- [ ] Strings novas em `values/strings.xml`: `settings_site`, `settings_site_url`, `settings_acknowledgment`, `settings_acknowledgment_url`. Em `values-pt/strings.xml`: `settings_site`, `settings_site_url`, `settings_acknowledgment` (= `Agradecimento`), `settings_acknowledgment_url`.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -214,6 +230,7 @@ adb -s d1d1b8f3 install -r app/build/outputs/apk/debug/app-debug.apk
 8.5. Com o toggle ligado (BLOQUEADO), abra a lista de Live TV e confirme que as categorias adultas aparecem. Toque em uma delas e confirme que o app exige o PIN configurado antes de abrir o conteúdo.
 8.6. Ligue o toggle pela primeira vez após `pm clear` e verifique via `adb shell run-as` que `hasParentalPin` ficou `true`. Tente acessar uma categoria adulta no app e confirme que ela só abre após digitar o PIN.
 8.7. Abra o diálogo `Limpar histórico` e confirme que ele dispara `viewModel.clearHistory()`.
+8.8. Abra a categoria `Sobre` e confirme que ela mostra apenas `Versão`, `Site` e `Agradecimento`. Toque em `Site` e em `Agradecimento` e confirme que cada um abre o URL correspondente no navegador/handler padrão.
 9. Verifique o banco após o login:
 
 ```bash
@@ -262,6 +279,7 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 | Conteúdo adulto não exige PIN quando BLOQUEADO | Confirme `setAdultContentEnabled(true)` chama `setParentalControlLevel(PARENTAL_LEVEL_LOCKED)` (1). O fluxo de PIN em listas/categorias deve continuar exigindo o PIN já configurado. |
 | Aparece item "Configurar PIN" na Privacidade | Não deve haver nenhum item para alterar o PIN do conteúdo adulto. Remova `AdultContentConfigurePinRow` e os callbacks `onShowPinDialogChange`/`onPendingActionChange` da assinatura de `settingsPrivacySection(...)`. |
 | Literal `0000` aparece na tela de Privacidade | A `subtitle` do toggle não pode mencionar o PIN. Remova qualquer referência a `0000` da `settings_adult_content_subtitle`. |
+| Sobre mostra Atualizações/Crash Reports/Build Info | Reescreva `settingsAboutSection(...)` para emitir apenas `SettingsRow(version)` + `ClickableSettingsRow(site)` + `ClickableSettingsRow(acknowledgment)`. Apague os blocos antigos de Updates e Crash Reports. |
 
 ## Não fazer
 
@@ -272,6 +290,7 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 - Não reintroduzir categorias do rail (Navegação, Gravação, Backup, EPG sources) sem revisar este roteiro.
 - Não reintroduzir toggles extras de Reprodução além de `Live stream format` e teste de velocidade sem revisar este roteiro.
 - Não reintroduzir o `ParentalControlCard` nem os toggles de Incógnito / Xtream name-based adult detection / Xtream Base64 na seção Privacidade sem revisar este roteiro.
+- Não reintroduzir Atualizações automáticas, Crash Reports, Build info, GitHub ou Doações na seção Sobre sem revisar este roteiro.
 - Não remover a autenticação do `ValidateAndAddProvider`.
 - Não bloquear o Welcome aguardando o catálogo inteiro.
 - Não commitar credenciais de cliente.

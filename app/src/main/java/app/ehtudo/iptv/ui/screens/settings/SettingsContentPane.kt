@@ -70,19 +70,7 @@ internal fun SettingsContentPane(
             )
         } else if (dialogState.selectedCategory == 3) {
             settingsAboutSection(
-                uiState = uiState,
-                context = context,
-                buildVerificationLabel = screenLabels.buildVerificationLabel,
-                onOpenUri = onOpenUri,
-                onCheckForUpdates = viewModel::checkForAppUpdates,
-                onInstallDownloadedUpdate = viewModel::installDownloadedUpdate,
-                onDownloadLatestUpdate = viewModel::downloadLatestUpdate,
-                onSetAutoCheckAppUpdates = viewModel::setAutoCheckAppUpdates,
-                onSetAutoDownloadAppUpdates = viewModel::setAutoDownloadAppUpdates,
-                onRefreshDownloadState = viewModel::refreshDownloadState,
-                onViewCrashReport = onViewCrashReport,
-                onShareCrashReport = onShareCrashReport,
-                onDeleteCrashReport = onDeleteCrashReport
+                onOpenUri = onOpenUri
             )
         }
     }
