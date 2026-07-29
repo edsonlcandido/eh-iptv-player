@@ -35,6 +35,7 @@
     <string name="welcome_username_hint">Usuário</string>
     <string name="welcome_password_hint">Senha</string>
     <string name="welcome_save">Salvar</string>
+    <string name="welcome_whatsapp_link">Fale conosco pelo WhatsApp (+5511932055173)</string>
     <string name="welcome_username_required">Digite seu usuário</string>
     <string name="welcome_password_required">Digite sua senha</string>
 

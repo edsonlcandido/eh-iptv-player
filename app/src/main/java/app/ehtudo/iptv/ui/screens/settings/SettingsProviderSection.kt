@@ -1,5 +1,8 @@
 package app.ehtudo.iptv.ui.screens.settings
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,12 +25,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ButtonDefaults
@@ -142,6 +147,7 @@ private fun QuickXtreamProviderCard(
     onPasswordChange: (String) -> Unit,
     onSave: () -> Unit
 ) {
+    val context = LocalContext.current
     Surface(
         modifier = Modifier
             .widthIn(max = 480.dp)
@@ -230,9 +236,30 @@ private fun QuickXtreamProviderCard(
                     color = Color.White
                 )
             }
+
+            MaterialText(
+                text = stringResource(R.string.welcome_whatsapp_link),
+                color = AppColors.Brand,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    textDecoration = TextDecoration.Underline
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        runCatching {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(EH_IPTV_WHATSAPP_URL))
+                            )
+                        }
+                    }
+                    .padding(vertical = 6.dp)
+            )
         }
     }
 }
+
+private const val EH_IPTV_WHATSAPP_URL = "http://wa.me/+5511932055173"
 
 @Composable
 private fun quickXtreamTextFieldColors() = OutlinedTextFieldDefaults.colors(

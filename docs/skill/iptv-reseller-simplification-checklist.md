@@ -54,6 +54,7 @@ Arquivos principais: `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/Welco
 - [ ] O usuário e a senha são validados antes da chamada de login.
 - [ ] O botão usa `R.string.welcome_save` (`Salvar`).
 - [ ] O botão Salvar usa fundo azul-claro (`AppColors.BrandStrong`) e texto branco.
+- [ ] Logo abaixo do botão Salvar aparece um link `Fale conosco pelo WhatsApp (+5511932055173)` (`R.string.welcome_whatsapp_link`) com sublinhado e cor `AppColors.Brand`. Ao clicar, abre `http://wa.me/+5511932055173` em um `Intent.ACTION_VIEW` (constante `EH_IPTV_WHATSAPP_URL` em `WelcomeScreen.kt`). O número é exibido entre parênteses para o usuário conseguir visualizar e discar manualmente em instalações em TV (sem câmera/leitor de QR).
 - [ ] O login constrói `XtreamProviderSetupCommand` com:
   - `serverUrl = "http://dnstv.top/"`;
   - `name = "Eh! IPTV"`;
@@ -87,6 +88,7 @@ Arquivos principais:
   - campo de usuário;
   - campo de senha em texto simples;
   - botão `Salvar`;
+  - link `Fale conosco pelo WhatsApp (+5511932055173)` (`R.string.welcome_whatsapp_link`) abaixo do botão Salvar, com sublinhado e cor `AppColors.Brand`, abrindo `http://wa.me/+5511932055173` em `Intent.ACTION_VIEW` (constante `EH_IPTV_WHATSAPP_URL` em `SettingsProviderSection.kt`). O número é exibido entre parênteses para o usuário visualizar e discar manualmente em instalações em TV (sem câmera/leitor de QR);
   - mensagem de erro de validação ou autenticação.
 - [ ] O formulário vazio usa o mesmo URL Xtream fixo `http://dnstv.top/` e nome padrão `Eh! IPTV` do Welcome.
 - [ ] O botão Salvar do formulário de provedores usa fundo azul-claro (`AppColors.BrandStrong`) e texto branco.

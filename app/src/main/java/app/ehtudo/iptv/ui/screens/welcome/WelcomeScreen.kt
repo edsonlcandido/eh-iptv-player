@@ -1,6 +1,9 @@
 package app.ehtudo.iptv.ui.screens.welcome
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -37,6 +41,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -360,6 +365,7 @@ private fun WelcomeStartCard(
     onSave: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Surface(
         modifier = modifier
             .widthIn(max = 480.dp)
@@ -466,6 +472,25 @@ private fun WelcomeStartCard(
                 )
             }
 
+            Text(
+                text = stringResource(R.string.welcome_whatsapp_link),
+                color = AppColors.Brand,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    textDecoration = TextDecoration.Underline
+                ),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        runCatching {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(EH_IPTV_WHATSAPP_URL))
+                            )
+                        }
+                    }
+                    .padding(vertical = 6.dp)
+            )
+
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.welcome_manage_hint),
@@ -489,3 +514,5 @@ private fun sectionLabelRes(section: Section): Int = when (section) {
     Section.VOD -> R.string.sync_section_vod
     Section.SERIES -> R.string.sync_section_series
 }
+
+private const val EH_IPTV_WHATSAPP_URL = "http://wa.me/+5511932055173"

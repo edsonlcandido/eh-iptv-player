@@ -13,12 +13,6 @@ plugins {
     alias(libs.plugins.kover)
 }
 
-val keystorePropertiesFile = rootProject.file("keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    FileInputStream(keystorePropertiesFile).use(keystoreProperties::load)
-}
-
 val localPropertiesFile = rootProject.file("local.properties")
 val localProperties = Properties()
 if (localPropertiesFile.exists()) {
@@ -28,15 +22,14 @@ if (localPropertiesFile.exists()) {
 fun localProp(key: String): String = localProperties.getProperty(key, "")
 
 fun computeOfficialSigningCertSha256(): String {
-    if (!keystorePropertiesFile.exists()) return ""
-
-    val storePath = keystoreProperties.getProperty("storeFile") ?: return ""
-    val storePassword = keystoreProperties.getProperty("storePassword") ?: return ""
-    val keyAlias = keystoreProperties.getProperty("keyAlias") ?: return ""
-    val storeFile = rootProject.file(storePath)
+    val storePath = localProp("RELEASE_STORE_FILE")
+    val storePassword = localProp("RELEASE_STORE_PASSWORD")
+    val keyAlias = localProp("RELEASE_KEY_ALIAS")
+    if (storePath.isBlank() || storePassword.isBlank() || keyAlias.isBlank()) return ""
+    val storeFile = file(storePath)
     if (!storeFile.exists()) return ""
 
-    val keyStore = KeyStore.getInstance("JKS")
+    val keyStore = KeyStore.getInstance("PKCS12")
     storeFile.inputStream().use { input ->
         keyStore.load(input, storePassword.toCharArray())
     }
@@ -80,13 +73,11 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
+        create("release") {
+            storeFile = file(localProp("RELEASE_STORE_FILE"))
+            storePassword = localProp("RELEASE_STORE_PASSWORD")
+            keyAlias = localProp("RELEASE_KEY_ALIAS")
+            keyPassword = localProp("RELEASE_KEY_PASSWORD")
         }
     }
 
@@ -110,9 +101,7 @@ android {
             // Keep beta close to release behavior but faster for CI/test distribution.
             isMinifyEnabled = false
             isShrinkResources = false
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
             matchingFallbacks += listOf("release")
         }
         release {
@@ -122,9 +111,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -23,6 +23,7 @@
     <string name="welcome_feature_library">Filmes e séries de grande biblioteca sem confusão</string>
     <string name="welcome_feature_player">Sobreposições de player unificadas, acesso de guia e conteúdo salvo</string>
     <string name="welcome_manage_hint">Troque de provedor, atualize metadados ou adicione uma nova fonte.</string>
+    <string name="welcome_whatsapp_link">Fale conosco pelo WhatsApp (+5511932055173)</string>
     <string name="home_incorrect_pin">PIN incorreto</string>
     <string name="home_loading_categories">Carregando categorias...</string>
     <string name="home_loading_channels">Carregando canais...</string>
