@@ -18,7 +18,32 @@ Multi-module Android TV IPTV player (Kotlin, Jetpack Compose, Room, Hilt, Media3
 - `applicationId` is `app.ehtudo.iptv`; `debug` build adds `.debug` suffix, `beta` adds `.beta`
 - Version: `versionName = "1.0.16"`, `versionCode = 17` — bump in `app/build.gradle.kts`
 
-The Welcome screen is the simplified onboarding: title "Eh! IPTV", only username + password as plain text inputs, hardcoded Xtream URL `http://dnstv.top/`, default provider name "Eh! IPTV". The full `ProviderSetupScreen` is still reachable for advanced/Stalker/M3U/Jellyfin.
+The Welcome screen is the simplified onboarding: title "Eh! IPTV", only username + password as plain text inputs, default provider name "Eh! IPTV". The full `ProviderSetupScreen` is still reachable for advanced/Stalker/M3U/Jellyfin.
+
+### Xtream server URL — 3-tier resolver (skill #11)
+
+The Xtream server URL is no longer a single hardcoded constant. `WelcomeViewModel.loginXtream` and `SettingsViewModel.addQuickXtreamProvider` both resolve the URL at runtime through `XtreamConfigRepository` (skill #11, see `docs/skill/dynamic-xtream-server-url.md`). The resolver tries three tiers in order, first non-empty wins:
+
+1. **Remote config** — `https://ehtudo.app/iptv-config.json` (HTTPS GET, 3 s timeout). The operator hosts this on their own CDN (Cloudflare Pages, GitHub Pages, etc.) and bumps `version` when they swap mirrors. The endpoint is configurable via `BuildConfig.XTREAM_REMOTE_CONFIG_URL`; in the `debug` build it can be overridden by the `xtream.dev.remoteConfigUrl` property in `local.properties`.
+2. **DataStore cache** — the last URL the resolver successfully accepted, persisted via `PreferencesRepository.xtreamServerUrl` + `xtreamRemoteConfigVersion`. Survives app restarts. Invalidation: the cache is refreshed when the remote `version` is strictly greater than the cached version.
+3. **Compile-time hardcoded fallback** — `internal const val HARDCODED_XTREAM_URL` in `WelcomeScreen.kt`, currently `"http://dnstv.top/"`. `XtreamConfigModule` references this constant so the welcome screen remains the single source of truth.
+
+The user never sees the URL. The Welcome and Quick-Xtream forms stay 2-field + Salvar. The `HARDCODED_XTREAM_URL` constant in `ProviderSetupScreen.kt` is unrelated to skill #11 — that screen is the advanced form where the user types a server URL explicitly (Stalker / M3U / Jellyfin / arbitrary Xtream mirror) and the resolver does not apply.
+
+Files added/modified by this skill:
+
+- `data/src/main/java/app/ehtudo/data/config/XtreamRemoteConfig.kt` (new, DTO)
+- `data/src/main/java/app/ehtudo/data/config/XtreamConfigRepository.kt` (new, resolver)
+- `app/src/main/java/app/ehtudo/iptv/di/XtreamConfigModule.kt` (new, Hilt binding)
+- `data/src/main/java/app/ehtudo/data/preferences/PreferencesRepository.kt` (+3 keys: `XTREAM_SERVER_URL`, `XTREAM_REMOTE_CONFIG_VERSION`, `XTREAM_REMOTE_CONFIG_LAST_FETCH_AT`)
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt` (inject resolver; `HARDCODED_XTREAM_URL` promoted to `internal`)
+- `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsViewModel.kt` (inject resolver; `QUICK_XTREAM_URL` removed)
+- `app/build.gradle.kts` (+`buildConfigField "String" XTREAM_REMOTE_CONFIG_URL`, with `debug`-only override via `xtream.dev.remoteConfigUrl`)
+
+To verify the resolver is working, check `adb logcat -s XtreamConfigRepository`. The expected log lines are:
+- `remote config updated: v1 -> http://dnstv.top/` (happy path, first time)
+- `remote config unreachable, using cached URL: http://dnstv.top/` (remote down, cache hit)
+- `no remote or cached URL, using hardcoded fallback: http://dnstv.top/` (fresh install, remote down)
 
 ## Build and test
 

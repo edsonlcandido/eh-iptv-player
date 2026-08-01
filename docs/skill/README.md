@@ -30,6 +30,8 @@ The user must **only see**:
 | 7 | [testing-on-xiaomi-miui-device.md](./testing-on-xiaomi-miui-device.md) | How to sideload and test on the Xiaomi POCO M2012K11AG with the MIUI "Install via USB" gate |
 | 8 | [configure-top-navigation-via-settings.md](./configure-top-navigation-via-settings.md) | How to hide / reorder / pin top-menu tabs (Downloads, Plugins, Home) — uses the existing **Settings → Navegação superior** dialog, never hardcode `defaultOrder` |
 | 9 | [all-customisation-surfaces-and-defaults.md](./all-customisation-surfaces-and-defaults.md) | Complete reference of every compile-time constant, every DataStore preference with its default, and every Settings UI section — answers "can the user change X?" and "what is the default for Y?" without re-reading the source |
+| 10 | [customise-accent-colors.md](./customise-accent-colors.md) | Rebrand the app's `Brand*` color family (focus, links, selected pills, card borders, badges) by editing 3 lines in `AppColors.kt`. Documents the Brand vs semantic color boundary and provides worked palette examples (orange, red, purple, teal, pink) |
+| 11 | [dynamic-xtream-server-url.md](./dynamic-xtream-server-url.md) | Add a remote config layer (`https://ehtudo.app/iptv-config.json`) on top of skill #3's compile-time URL. Lets the operator swap Xtream mirrors without an APK rebuild. Includes a 3-tier fallback (remote → DataStore cache → hardcoded) so the app never breaks if the remote is unreachable |
 
 ## Project facts
 
