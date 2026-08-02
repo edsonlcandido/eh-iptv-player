@@ -156,9 +156,6 @@ fun LiveChannelRowCard(
                         if (channel.isFavorite) {
                             StatusPill(label = stringResource(R.string.badge_saved), containerColor = AppColors.Warning, contentColor = Color.Black)
                         }
-                        if (hasUsableArchive) {
-                            StatusPill(label = stringResource(R.string.badge_catch_up), containerColor = AppColors.Brand)
-                        }
                     }
                 }
                 Text(
@@ -227,9 +224,7 @@ fun LiveChannelRowSurface(
     val sounds = rememberTvInteractionSounds()
     val focusRequester = remember { FocusRequester() }
     val favoriteLabel = stringResource(R.string.a11y_favorite)
-    val catchUpLabel = stringResource(R.string.a11y_catch_up_available)
     val lockedLabel = stringResource(R.string.a11y_locked)
-    val hasUsableArchive = channel.archivePlaybackCapability().canBuildReplayCandidate
     val channelDescription = buildString {
         append(
             channel.number.takeIf { it > 0 }?.let {
@@ -243,10 +238,6 @@ fun LiveChannelRowSurface(
         if (channel.isFavorite) {
             append(". ")
             append(favoriteLabel)
-        }
-        if (hasUsableArchive) {
-            append(". ")
-            append(catchUpLabel)
         }
     }
     val scale by animateFloatAsState(

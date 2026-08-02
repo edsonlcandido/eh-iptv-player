@@ -200,7 +200,6 @@ fun ChannelCard(
 ) {
     val nowMs by ChannelProgressTicker.nowMs.collectAsStateWithLifecycle()
     val channelCardShape = LocalAppShapes.current.small
-    val hasUsableArchive = channel.archivePlaybackCapability().canBuildReplayCandidate
     val channelDescription = buildString {
         append(
             channel.number.takeIf { it > 0 }?.let {
@@ -215,10 +214,6 @@ fun ChannelCard(
             if (channel.isFavorite) {
                 append(". ")
                 append(stringResource(R.string.a11y_favorite))
-            }
-            if (hasUsableArchive) {
-                append(". ")
-                append(stringResource(R.string.a11y_catch_up_available))
             }
         }
     }
@@ -316,9 +311,6 @@ fun ChannelCard(
                 }
                 if (channel.errorCount > 0) {
                     StatusPill(label = stringResource(R.string.badge_error), containerColor = AccentRed, cornerRadius = 4.dp, horizontalPadding = 6.dp, verticalPadding = 2.dp)
-                }
-                if (hasUsableArchive) {
-                    StatusPill(label = stringResource(R.string.badge_catch_up), containerColor = Primary, cornerRadius = 4.dp, horizontalPadding = 6.dp, verticalPadding = 2.dp)
                 }
                 if (isRecording) {
                     StatusPill(label = stringResource(R.string.badge_recording), containerColor = AccentRed, cornerRadius = 4.dp, horizontalPadding = 6.dp, verticalPadding = 2.dp)

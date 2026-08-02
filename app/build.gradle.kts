@@ -51,7 +51,7 @@ android {
         minSdk = 25
         targetSdk = 36
         versionCode = 17
-        versionName = "1.0.16-1"
+        versionName = "1.0.16-3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"app.ehtudo.iptv\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")

@@ -10,9 +10,9 @@ object AppColors {
     val SurfaceEmphasis = Color(0xFF1D2E46)
     val SurfaceAccent = Color(0xFF223754)
 
-    val Brand = Color(0xFF69A8FF)
-    val BrandMuted = Color(0x335FA4FF)
-    val BrandStrong = Color(0xFF8BBCFF)
+    val Brand = Color(0xFFFF6A1A)
+    val BrandMuted = Color(0x33FF6A1A)
+    val BrandStrong = Color(0xFFFF8A3D)
     val Focus = Color(0xFFF4F8FF)
 
     val TextPrimary = Color(0xFFF5F7FB)
