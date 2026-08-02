@@ -2,7 +2,6 @@ package app.ehtudo.iptv.ui.screens.settings
 
 import app.ehtudo.iptv.tv.LauncherRecommendationsManager
 import app.ehtudo.iptv.tv.WatchNextManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.domain.model.ActiveLiveSource
 import app.ehtudo.domain.model.ChannelLogoSourcePolicy
 import app.ehtudo.domain.model.GuideSourcePolicy
@@ -35,7 +34,6 @@ internal class SettingsProviderActions(
     private val syncMetadataRepository: SyncMetadataRepository,
     private val watchNextManager: WatchNextManager,
     private val launcherRecommendationsManager: LauncherRecommendationsManager,
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager,
     private val uiState: MutableStateFlow<SettingsUiState>
 ) {
     private companion object {
@@ -63,7 +61,6 @@ internal class SettingsProviderActions(
             combinedM3uRepository.setActiveLiveSource(ActiveLiveSource.ProviderSource(providerId))
             watchNextManager.refreshWatchNext()
             launcherRecommendationsManager.refreshRecommendations(force = true)
-            tvInputChannelSyncManager.refreshTvInputCatalog()
             val lastSyncedAt = provider.lastSyncedAt
             val shouldAutoSync = lastSyncedAt <= 0L ||
                 System.currentTimeMillis() - lastSyncedAt >= AUTO_SWITCH_SYNC_STALE_AFTER_MS
@@ -364,7 +361,6 @@ internal class SettingsProviderActions(
                         syncingProviderName = providerName
                     )
                 }
-                tvInputChannelSyncManager.refreshTvInputCatalog()
             } else if (!catalogRefreshed) {
                 uiState.update { state ->
                     state.copy(
@@ -508,7 +504,6 @@ internal class SettingsProviderActions(
                     onSuccess()
                     runCatching { watchNextManager.refreshWatchNext() }
                     runCatching { launcherRecommendationsManager.refreshRecommendations(force = true) }
-                    runCatching { tvInputChannelSyncManager.refreshTvInputCatalog() }
                 }
                 is Result.Error -> uiState.update {
                     it.copy(

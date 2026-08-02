@@ -32,6 +32,8 @@ The user must **only see**:
 | 9 | [all-customisation-surfaces-and-defaults.md](./all-customisation-surfaces-and-defaults.md) | Complete reference of every compile-time constant, every DataStore preference with its default, and every Settings UI section — answers "can the user change X?" and "what is the default for Y?" without re-reading the source |
 | 10 | [customise-accent-colors.md](./customise-accent-colors.md) | Rebrand the app's `Brand*` color family (focus, links, selected pills, card borders, badges) by editing 3 lines in `AppColors.kt`. Documents the Brand vs semantic color boundary and provides worked palette examples (orange, red, purple, teal, pink) |
 | 11 | [dynamic-xtream-server-url.md](./dynamic-xtream-server-url.md) | Add a remote config layer (`https://ehtudo.app/iptv-config.json`) on top of skill #3's compile-time URL. Lets the operator swap Xtream mirrors without an APK rebuild. Includes a 3-tier fallback (remote → DataStore cache → hardcoded) so the app never breaks if the remote is unreachable |
+| 12 | [disable-tv-input-service.md](./disable-tv-input-service.md) | Strip the `StreamVaultTvInputService` so the app no longer registers as a "Live TV channel" in the Android TV input picker. Removes the service, setup activity, sync manager, manifest entries, 3 permissions, and 6 Kotlin call-sites. Use when the reseller's server doesn't expose a real TV input feed |
+| 13 | [customise-banners-and-launcher-art.md](./customise-banners-and-launcher-art.md) | Regenerate the TV launcher banner, app launcher icon, and welcome background from the canonical `ic_launcher_vault_art.png`. Includes a Python script that uses `contain` (no edge crop) and the right background color. Use after any brand change |
 
 ## Project facts
 

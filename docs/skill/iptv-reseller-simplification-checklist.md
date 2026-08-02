@@ -263,6 +263,31 @@ Arquivos principais:
 - [ ] **Resíduo Live TV:** as funções do ViewModel `viewModel.selectVideoQuality(...)` e o caminho `showTrackSelection = TrackType.VIDEO` continuam existindo; o overlay completo `PlayerControlsOverlay` (acessado por INFO/MENU) ainda passa `videoTracks` para o motor do player — apenas o botão da `ChannelInfoOverlay` foi removido.
 - [ ] Build `:app:compileDebugKotlin` passa.
 
+## Fase 4k — Identidade visual: regenerar banner e welcome com a arte EH! IPTV
+
+Skill de referência: [`customise-banners-and-launcher-art.md`](./customise-banners-and-launcher-art.md) (#13). Complementa a Fase 1 (identidade e pacote) e deve ser reaplicado sempre que a arte canônica mudar.
+
+Arquivos a regenerar:
+
+- [ ] `app/src/main/res/drawable-*/ic_launcher_vault_art.png` (5 densities: mdpi 108, hdpi 162, xhdpi 216, xxhdpi 324, xxxhdpi 432). É a **fonte canônica** — atualize aqui primeiro, o resto flui dela.
+- [ ] `app/src/main/res/mipmap-*/ic_launcher_vault.png` (5 densities). Legado para pre-API 26 e alguns launchers. Roda o script Python da skill #13.
+- [ ] `app/src/main/res/drawable-*/app_banner.png` (5 densities). Banner do launcher da Android TV. Roda o mesmo script — o script detecta `app_banner.png` e `ic_launcher_vault.png` automaticamente.
+- [ ] `app/src/main/res/drawable/welcome_bg.png` (1536×1024, arquivo único). Use `image_synthesize` com a arte como referência e o prompt da skill #13; redimensione o output para 1536×1024 antes de salvar.
+- [ ] `mipmap-anydpi-v26/ic_launcher_vault.xml` e `drawable/ic_launcher_foreground.xml` **não mudam** — a arte é referenciada por `@drawable/ic_launcher_vault_art`, que resolve via density qualifier.
+
+Validações de imagem (use Python com PIL):
+
+- [ ] Os 5 `mipmap-*/ic_launcher_vault.png` são o ícone EH! IPTV (TV + 2 pessoas + texto "EH! IPTV") em laranja sobre fundo dark.
+- [ ] Os 5 `drawable-*/app_banner.png` mostram o ícone **inteiro** (sem corte nas bordas do TV nem no texto "EH! IPTV" — bug fácil: se usar cover-crop em vez de contain, o texto vira "HI IPTV").
+- [ ] Aspect ratio preservado: banners em 16:9, mipmaps em 1:1.
+
+Build + verificar:
+
+- [ ] `./gradlew :app:assembleDebug --no-daemon` passa.
+- [ ] O `app/build/intermediates/packaged_res/.../app_banner.png` e os `mipmap-*/ic_launcher_vault.png` regenerados a partir do source (verifique com `ls -la` ou `Get-ChildItem` no diretório de build/intermediates).
+- [ ] Após `adb install -r`, o launcher da TV mostra o banner novo (sem cache antigo — veja o `force-stop com.google.android.tvlauncher` da skill #12 se necessário).
+- [ ] Após `adb install -r`, o ícone do app no drawer da TV/celular mostra a arte nova.
+
 ## Fase 5 — Ativação e sincronização
 
 Arquivo principal: `data/src/main/java/app/ehtudo/data/repository/ProviderRepositoryImpl.kt`.
@@ -360,6 +385,55 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 5. Rode `git diff --check` e revise o diff completo.
 6. Rode `graphify update .` após modificar código; se o comando não existir no ambiente, registre a limitação.
 
+## Fase 11 — Desabilitar TV Input Service (instalar como phone)
+
+Skill de referência: [`disable-tv-input-service.md`](./disable-tv-input-service.md) (#12). Aplica quando o servidor do revendedor não expõe um feed de TV input real (a maioria dos servidores Xtream) e o "StreamVault Live Channels" aparecendo no menu Inputs/Sources da TV confunde o usuário (abre um modal separado que leva à tela de escolha de fonte, divergente do welcome flow).
+
+Arquivos a deletar:
+
+- [ ] `app/src/main/java/app/ehtudo/iptv/tvinput/StreamVaultTvInputService.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/tvinput/TvInputSetupActivity.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/tvinput/TvInputChannelSyncManager.kt`
+- [ ] `app/src/main/res/xml/tv_input_service.xml`
+
+`AndroidManifest.xml` — remover três blocos:
+
+- [ ] 3 permissões TV: `BIND_TV_INPUT`, `READ_EPG_DATA`, `WRITE_EPG_DATA` (no topo do manifest).
+- [ ] O `<activity android:name=".tvinput.TvInputSetupActivity" ... />`.
+- [ ] O `<service android:name=".tvinput.StreamVaultTvInputService" ... />` (com `android:label="StreamVault Live Channels"` e o meta-data `@xml/tv_input_service`).
+
+Código Kotlin — remover de 6 arquivos (import + `@Inject` field + call sites + argumento no construtor):
+
+- [ ] `app/src/main/java/app/ehtudo/iptv/MainActivity.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/plugins/StreamVaultPluginManager.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsViewModel.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsSyncActions.kt` (também remover o `if (completed.any { it == ... settings_sync_option_tv ... }) { tvInputChannelSyncManager.refreshTvInputCatalog() }` — fica dead code)
+- [ ] `app/src/main/java/app/ehtudo/iptv/ui/screens/settings/SettingsProviderActions.kt`
+- [ ] `app/src/main/java/app/ehtudo/iptv/ui/screens/home/HomeViewModel.kt`
+
+Testes (limpar antes do próximo `testDebugUnitTest`):
+
+- [ ] Deletar `app/src/test/java/app/ehtudo/iptv/tvinput/TvInputChannelSyncManagerTest.kt`.
+- [ ] Limpar referências em `app/src/test/java/app/ehtudo/iptv/ui/screens/settings/SettingsProviderActionsTest.kt`.
+- [ ] Limpar referências em `app/src/test/java/app/ehtudo/iptv/ui/screens/home/HomeViewModelTest.kt`.
+
+Strings (opcional, em `app/src/main/res/values/strings.xml`):
+
+- [ ] Remover as 15 strings com prefixo `tv_input_setup_*` (deixei nos 27 locales como inerte — cleanup separado).
+
+Validações:
+
+- [ ] `rg "tvinput|TvInput|TV_INPUT|READ_EPG_DATA|WRITE_EPG_DATA|BIND_TV_INPUT" app/src/main` retorna vazio (exceto locale files se deferiu cleanup).
+- [ ] `./gradlew :app:assembleDebug --no-daemon` passa.
+- [ ] Após `adb uninstall` + `adb install` na TV, abrir o menu `Inputs / Sources` da TV. A entrada "Eh! IPTV" / "StreamVault Live Channels" **não** aparece.
+- [ ] Abrir o app pelo launcher da TV — entra direto no welcome (ou dashboard, se já configurado), **sem** modal "select your provider".
+
+Não fazer:
+
+- Não ocultar o `<service>` por flag de build. O sistema de TV indexa a entrada agressivamente; o único jeito de remover é deletar o código + `uninstall` antes do próximo `install`.
+- Não remover `LEANBACK_LAUNCHER` do intent-filter do MainActivity junto com esta fase. O app continua pertencendo ao launcher da TV — só não se registra como input.
+- Não reaproveitar `StreamVaultTvInputService.kt` como stub vazio "pra reativar depois". O código puxa `androidx.tvprovider`, `TvContract` e parte de `media.tv` que apodrecem.
+
 ## Regressões conhecidas
 
 | Sintoma | Verificação inicial |
@@ -413,3 +487,5 @@ Ao reaplicar o roteiro sobre uma nova base StreamVault:
 - Não bloquear o Welcome aguardando o catálogo inteiro.
 - Não commitar credenciais de cliente.
 - Não misturar renome de pacote com mudanças visuais e de onboarding no mesmo commit quando uma separação for possível.
+- Não reintroduzir o `StreamVaultTvInputService` (ou o label "StreamVault Live Channels" no menu Inputs da TV) sem antes confirmar que o servidor do revendedor expõe um feed TV input real. A Fase 11 remove a feature por padrão.
+- Não usar cover-crop ao regenerar `app_banner.png` (Fase 4k) — o ícone tem o texto "EH! IPTV" nas bordas e cover-crop corta em "HI IPTV". Usar `contain` (fit inside, sem crop) com 8% de padding.

@@ -21,7 +21,6 @@ import app.ehtudo.iptv.navigation.ExternalNavigationRequest
 import app.ehtudo.iptv.navigation.PlayerNavigationRequest
 import app.ehtudo.iptv.tv.LauncherRecommendationsManager
 import app.ehtudo.iptv.tv.WatchNextManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.iptv.ui.theme.StreamVaultTheme
 import app.ehtudo.iptv.ui.time.LocalAppTimeFormat
 import app.ehtudo.domain.repository.ChannelRepository
@@ -100,9 +99,6 @@ class MainActivity : ComponentActivity() {
     lateinit var launcherRecommendationsManager: LauncherRecommendationsManager
 
     @Inject
-    lateinit var tvInputChannelSyncManager: TvInputChannelSyncManager
-
-    @Inject
     lateinit var castManager: CastManager
 
     private val _pictureInPictureModeFlow = MutableStateFlow(false)
@@ -135,7 +131,6 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 watchNextManager.refreshWatchNext()
                 launcherRecommendationsManager.refreshRecommendations()
-                tvInputChannelSyncManager.refreshTvInputCatalog()
             }
         }
         setContent {

@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import app.ehtudo.iptv.player.LivePreviewHandoffManager
 import app.ehtudo.iptv.plugins.StreamVaultPluginManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.iptv.ui.screens.multiview.MultiViewManager
 import app.ehtudo.data.preferences.PreferencesRepository
 import app.ehtudo.data.sync.SyncManager
@@ -55,7 +54,6 @@ class HomeViewModelTest {
     private val unlockParentalCategory: UnlockParentalCategory = mock()
     private val parentalControlManager: ParentalControlManager = mock()
     private val syncManager: SyncManager = mock()
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager = mock()
     private val multiViewManager = MultiViewManager()
     private val livePreviewHandoffManager: LivePreviewHandoffManager = mock()
     private val pluginManager: StreamVaultPluginManager = mock()
@@ -141,7 +139,6 @@ class HomeViewModelTest {
             unlockParentalCategory = unlockParentalCategory,
             parentalControlManager = parentalControlManager,
             syncManager = syncManager,
-            tvInputChannelSyncManager = tvInputChannelSyncManager,
             multiViewManager = multiViewManager,
             livePreviewHandoffManager = livePreviewHandoffManager,
             pluginManager = pluginManager,

@@ -13,7 +13,6 @@ import android.provider.Settings
 import androidx.core.content.FileProvider
 import app.ehtudo.iptv.BuildConfig
 import app.ehtudo.iptv.cast.CastMediaRequest
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.domain.model.ActiveLiveSource
 import app.ehtudo.domain.model.DrmInfo
 import app.ehtudo.domain.model.DrmScheme
@@ -46,7 +45,6 @@ class StreamVaultPluginManager @Inject constructor(
     private val messengerClient: PluginMessengerClient,
     private val providerRepository: ProviderRepository,
     private val combinedM3uRepository: CombinedM3uRepository,
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager,
     private val okHttpClient: OkHttpClient,
     private val json: Json
 ) {
@@ -496,7 +494,6 @@ class StreamVaultPluginManager @Inject constructor(
         prefs.edit().putLong(providerKey(plugin.manifest.id), provider.id).apply()
         providerRepository.setActiveProvider(provider.id)
         attachProviderToLiveSource(provider.id, activeSource)
-        refreshTvInputCatalogInBackground()
         return null
     }
 
@@ -513,7 +510,6 @@ class StreamVaultPluginManager @Inject constructor(
             combinedM3uRepository.setActiveLiveSource(null)
         }
         prefs.edit().remove(providerKey(plugin.manifest.id)).apply()
-        refreshTvInputCatalogInBackground()
         return null
     }
 
@@ -534,12 +530,6 @@ class StreamVaultPluginManager @Inject constructor(
                 it.type == ProviderType.M3U && it.m3uUrl.isNotBlank() && it.name == plugin.manifest.providerName
             }
         return providerRepository.getProvider(providerId)
-    }
-
-    private fun refreshTvInputCatalogInBackground() {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).let { scope ->
-            scope.launchCatching { tvInputChannelSyncManager.refreshTvInputCatalog() }
-        }
     }
 
     private fun resolvePlugin(resolveInfo: ResolveInfo): InstalledStreamVaultPlugin? {

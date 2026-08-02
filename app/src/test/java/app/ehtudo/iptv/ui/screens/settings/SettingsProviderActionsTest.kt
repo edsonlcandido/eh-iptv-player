@@ -3,7 +3,6 @@ package app.ehtudo.iptv.ui.screens.settings
 import com.google.common.truth.Truth.assertThat
 import app.ehtudo.iptv.tv.LauncherRecommendationsManager
 import app.ehtudo.iptv.tv.WatchNextManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.data.preferences.PreferencesRepository
 import app.ehtudo.data.sync.SyncManager
 import app.ehtudo.domain.model.ActiveLiveSource
@@ -39,7 +38,6 @@ class SettingsProviderActionsTest {
     private val syncMetadataRepository: SyncMetadataRepository = mock()
     private val watchNextManager: WatchNextManager = mock()
     private val launcherRecommendationsManager: LauncherRecommendationsManager = mock()
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager = mock()
     private val uiState = MutableStateFlow(SettingsUiState())
 
     private val actions = SettingsProviderActions(
@@ -51,7 +49,6 @@ class SettingsProviderActionsTest {
         syncMetadataRepository = syncMetadataRepository,
         watchNextManager = watchNextManager,
         launcherRecommendationsManager = launcherRecommendationsManager,
-        tvInputChannelSyncManager = tvInputChannelSyncManager,
         uiState = uiState
     )
 
@@ -74,7 +71,6 @@ class SettingsProviderActionsTest {
         verify(providerRepository).setActiveProvider(7L)
         verify(watchNextManager).refreshWatchNext()
         verify(launcherRecommendationsManager).refreshRecommendations(force = true)
-        verify(tvInputChannelSyncManager).refreshTvInputCatalog()
         verify(syncProvider, never()).invoke(any(), any())
     }
 
@@ -88,7 +84,6 @@ class SettingsProviderActionsTest {
         verify(providerRepository).deleteProvider(eq(7L), any())
         verify(watchNextManager).refreshWatchNext()
         verify(launcherRecommendationsManager).refreshRecommendations(force = true)
-        verify(tvInputChannelSyncManager).refreshTvInputCatalog()
         assertThat(uiState.value.userMessage).isEqualTo("Provider deleted")
     }
 
@@ -105,7 +100,6 @@ class SettingsProviderActionsTest {
         verify(providerRepository).deleteProvider(eq(7L), any())
         verify(watchNextManager).refreshWatchNext()
         verify(launcherRecommendationsManager).refreshRecommendations(force = true)
-        verify(tvInputChannelSyncManager).refreshTvInputCatalog()
         assertThat(onSuccessCalled).isTrue()
         assertThat(uiState.value.isDeletingProvider).isFalse()
         assertThat(uiState.value.userMessage).isEqualTo("Provider deleted")

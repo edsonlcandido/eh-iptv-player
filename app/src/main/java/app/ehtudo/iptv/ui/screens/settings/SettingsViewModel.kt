@@ -10,7 +10,6 @@ import app.ehtudo.iptv.BuildConfig
 import app.ehtudo.iptv.diagnostics.CrashReportStore
 import app.ehtudo.iptv.tv.LauncherRecommendationsManager
 import app.ehtudo.iptv.tv.WatchNextManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.iptv.ui.model.LiveTvChannelMode
 import app.ehtudo.iptv.ui.model.LiveTvQuickFilterVisibilityMode
 import app.ehtudo.iptv.ui.model.VodViewMode
@@ -129,7 +128,6 @@ class SettingsViewModel @Inject constructor(
     private val playbackHistoryRepository: app.ehtudo.domain.repository.PlaybackHistoryRepository,
     private val watchNextManager: WatchNextManager,
     private val launcherRecommendationsManager: LauncherRecommendationsManager,
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager,
     private val syncProvider: SyncProvider,
     private val epgSourceRepository: app.ehtudo.domain.repository.EpgSourceRepository,
     private val gitHubReleaseChecker: GitHubReleaseChecker,
@@ -183,13 +181,11 @@ class SettingsViewModel @Inject constructor(
         syncMetadataRepository = syncMetadataRepository,
         watchNextManager = watchNextManager,
         launcherRecommendationsManager = launcherRecommendationsManager,
-        tvInputChannelSyncManager = tvInputChannelSyncManager,
         uiState = _uiState
     )
     private val syncActions = SettingsSyncActions(
         appContext = application,
         syncManager = syncManager,
-        tvInputChannelSyncManager = tvInputChannelSyncManager,
         uiState = _uiState,
         refreshProvider = { scope, providerId, syncMode, progressPrefix, startedAt, sectionLabel, isCancelable ->
             providerActions.refreshProvider(

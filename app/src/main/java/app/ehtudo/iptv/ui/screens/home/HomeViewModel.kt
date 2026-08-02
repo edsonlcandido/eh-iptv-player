@@ -6,7 +6,6 @@ import app.ehtudo.iptv.di.AuxiliaryPlayerEngine
 import app.ehtudo.iptv.player.LivePreviewHandoffManager
 import app.ehtudo.iptv.player.PreviewHandoffSource
 import app.ehtudo.iptv.plugins.StreamVaultPluginManager
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.iptv.ui.screens.multiview.MultiViewManager
 import app.ehtudo.iptv.ui.model.applyProviderCategoryDisplayPreferences
 import app.ehtudo.iptv.ui.model.orderedByRequestedRawIds
@@ -81,7 +80,6 @@ class HomeViewModel @Inject constructor(
     private val unlockParentalCategory: UnlockParentalCategory,
     private val parentalControlManager: ParentalControlManager,
     private val syncManager: SyncManager,
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager,
     private val multiViewManager: MultiViewManager,
     private val livePreviewHandoffManager: LivePreviewHandoffManager,
     private val pluginManager: StreamVaultPluginManager,
@@ -1587,7 +1585,6 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             providerRepository.refreshProviderData(provider.id, force = true)
-            tvInputChannelSyncManager.refreshTvInputCatalog()
             _uiState.update { it.copy(isLoading = false) }
         }
     }

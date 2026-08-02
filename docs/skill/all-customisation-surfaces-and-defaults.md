@@ -21,7 +21,7 @@ The app has three layers of configuration, in increasing order of how easily the
 | `namespace` | `app.ehtudo.iptv` | Generated `BuildConfig` package, all internal resources. |
 | `applicationId` | `app.ehtudo.iptv` | Play Store ID, `pm list packages`. With build-type suffix, the `debug` build becomes `app.ehtudo.iptv.debug`. |
 | `versionCode` | `17` | Internal upgrade key. Must be bumped for every release. |
-| `versionName` | `1.0.16` | User-visible "About" label. |
+| `versionName` | `1.0.16-3` | User-visible "About" label. The `-N` suffix is the per-build iteration counter; bump on every release that doesn't also bump `versionCode`. |
 | `OFFICIAL_APPLICATION_ID` | `app.ehtudo.iptv` | `BuildConfig.OFFICIAL_APPLICATION_ID` — used by the update checker to verify the install is an official build. |
 | `OFFICIAL_SIGNING_CERT_SHA256` | (filled by `keystore.properties` if present) | `BuildConfig.OFFICIAL_SIGNING_CERT_SHA256` — used to validate the install against the official signing cert. |
 | `APP_UPDATE_CHANNEL` | `stable` (debug) / `beta` (beta build type) | `BuildConfig.APP_UPDATE_CHANNEL` — used to pick which release stream the auto-updater looks at. |

@@ -2,7 +2,6 @@ package app.ehtudo.iptv.ui.screens.settings
 
 import android.app.Application
 import app.ehtudo.iptv.R
-import app.ehtudo.iptv.tvinput.TvInputChannelSyncManager
 import app.ehtudo.data.sync.SyncManager
 import app.ehtudo.data.sync.SyncRepairSection
 import app.ehtudo.domain.model.ProviderType
@@ -17,7 +16,6 @@ import kotlinx.coroutines.launch
 internal class SettingsSyncActions(
     private val appContext: Application,
     private val syncManager: SyncManager,
-    private val tvInputChannelSyncManager: TvInputChannelSyncManager,
     private val uiState: MutableStateFlow<SettingsUiState>,
     private val refreshProvider: (CoroutineScope, Long, SettingsProviderSyncMode, String?, Long, String?, Boolean) -> Job
 ) {
@@ -226,13 +224,6 @@ internal class SettingsSyncActions(
                         isXtream = provider?.type == ProviderType.XTREAM_CODES || provider?.type == ProviderType.STALKER_PORTAL
                     )
                 }
-            }
-
-            if (completed.any {
-                    it == appContext.getString(R.string.settings_sync_option_tv)
-                }
-            ) {
-                tvInputChannelSyncManager.refreshTvInputCatalog()
             }
 
             uiState.update { state ->
