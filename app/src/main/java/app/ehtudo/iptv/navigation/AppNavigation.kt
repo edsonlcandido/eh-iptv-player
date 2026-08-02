@@ -438,8 +438,14 @@ fun AppNavigation(mainActivity: MainActivity) {
         }
     }
 
-    // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas without serializing
-    // each tab's full UI tree into saved state on every switch.
+    // NAV-M02/NAV-H02: Single helper replacing repeated tab lambdas.
+    // Sem popUpTo destrutivo: o WELCOME é removido após o login, então
+    // popUpTo(startDestinationId) não acha o destino e acaba resetando
+    // o back stack inteiro — o que destrói o ViewModel da tab anterior
+    // e força reload. Mantemos apenas launchSingleTop = true para evitar
+    // duplicar o mesmo destino no back stack, e deixamos o back stack
+    // crescer naturalmente — o botão back volta tela a tela como o user
+    // quer, e os ViewModels são preservados (dados em cache).
     fun tabNavigate(route: String) {
         val entry = navController.currentBackStackEntry ?: return
         if (!entry.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) return
@@ -447,11 +453,7 @@ fun AppNavigation(mainActivity: MainActivity) {
         if (currentRoute == route || currentRoute?.startsWith("$route?") == true) return
 
         navController.navigate(route) {
-            popUpTo(navController.graph.startDestinationId) {
-                saveState = true
-            }
             launchSingleTop = true
-            restoreState = true
         }
     }
 

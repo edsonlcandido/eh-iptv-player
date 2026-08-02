@@ -1,7 +1,5 @@
 package app.ehtudo.iptv.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +39,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -115,16 +112,6 @@ fun FocusableCard(
     val sounds = rememberTvInteractionSounds()
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
 
-    val scale by animateFloatAsState(
-        targetValue = if (isFocused) {
-            if (isReorderMode && !isDragging) 1f else FocusSpec.FocusedScale
-        } else {
-            if (isDragging) FocusSpec.FocusedScale else 1f
-        },
-        animationSpec = tween(durationMillis = 160),
-        label = "cardScale"
-    )
-
     Surface(
         onClick = {
             sounds.playSelect()
@@ -143,10 +130,6 @@ fun FocusableCard(
                     onClick()
                 }
             )
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .semantics(mergeDescendants = true) {
                 semanticsDescription?.let { contentDescription = it }
                 semanticsStateDescription?.let { stateDescription = it }

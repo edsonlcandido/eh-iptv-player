@@ -144,12 +144,67 @@ fun MoviesScreen(
         verifyPin = viewModel::verifyPin
     )
 
+    // Foco inicial: só tentamos mover o foco do item "Filmes" da TopBar para
+    // o conteúdo quando ALGUM card-alvo já está composto. Sem isso, o
+    // FocusRequester fica "querendo foco" enquanto o card de favorito/grid
+    // ainda carrega, o Compose joga o foco no primeiro focusable disponível
+    // (item "Search" da TopBar), e quando o card finalmente aparece o foco
+    // pula pra lá — com 2 sons de navegação. Aqui seguramos até o card
+    // existir, evitando o "passeio".
+    val hasContinueWatching = uiState.continueWatching.isNotEmpty()
+    val hasFavorites = uiState.moviesByCategory[uiState.favoriteCategoryName]?.isNotEmpty() == true
+    val hasFresh = uiState.libraryLensRows[MovieLibraryLens.FRESH]?.isNotEmpty() == true
+    val hasTopRated = uiState.libraryLensRows[MovieLibraryLens.TOP_RATED]?.isNotEmpty() == true
+    val hasCategoryItems = uiState.moviesByCategory.any { (_, items) -> items.isNotEmpty() }
+    val hasGridItems = uiState.selectedCategory != null && uiState.selectedCategoryItems.isNotEmpty()
+    val hasAnyTarget = hasContinueWatching || hasFavorites || hasFresh ||
+        hasTopRated || hasCategoryItems || hasGridItems
+    val canRequestInitialFocus =
+        !uiState.isLoading && uiState.errorMessage == null && hasAnyTarget
+
+    var restoreFocusNonce by remember { mutableIntStateOf(0) }
+    var pendingRestoreFocus by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    // Na primeira composição da tela, limpamos o foco default (que seria o
+    // item "Search" da TopBar — primeiro da defaultOrder) ANTES do nosso
+    // requestFocus rodar. Sem isso, o Compose põe foco no "Search" durante
+    // a restauração default, e o usuário vê o "passeio" Search → primeira
+    // capa com 2 sons de navegação. Também marcamos que devemos tentar
+    // focar no conteúdo.
+    LaunchedEffect(Unit) {
+        focusManager.clearFocus()
+        pendingRestoreFocus = true
+        restoreFocusNonce++
+    }
+
+    // Tenta focar quando (a) devemos restaurar E (b) já existe um alvo
+    // composto. Usa polling (a cada 50ms, até 1s) porque o primeiro card
+    // pode estar dentro de um LazyColumn/LazyVerticalGrid que ainda não
+    // foi medido na primeira tentativa — o FocusRequester ainda não tem
+    // nada anexado nesse momento e o requestFocus() falha silenciosamente.
+    LaunchedEffect(restoreFocusNonce, canRequestInitialFocus) {
+        if (pendingRestoreFocus && canRequestInitialFocus) {
+            repeat(20) {
+                if (initialContentFocusRequester.requestFocusSafely(
+                        tag = "MoviesScreen",
+                        target = "Initial movies content"
+                    )
+                ) {
+                    pendingRestoreFocus = false
+                    return@LaunchedEffect
+                }
+                delay(50)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         FocusRestoreHost(
             enabled = !uiState.isLoading && uiState.errorMessage == null,
             onRestore = {
-                delay(100)
-                initialContentFocusRequester.requestFocusSafely(tag = "MoviesScreen", target = "Initial movies content")
+                pendingRestoreFocus = true
+                restoreFocusNonce++
             }
         ) {
         AppScreenScaffold(
