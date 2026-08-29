@@ -34,6 +34,7 @@ The user must **only see**:
 | 11 | [dynamic-xtream-server-url.md](./dynamic-xtream-server-url.md) | Add a remote config layer (`https://ehtudo.app/iptv-config.json`) on top of skill #3's compile-time URL. Lets the operator swap Xtream mirrors without an APK rebuild. Includes a 3-tier fallback (remote → DataStore cache → hardcoded) so the app never breaks if the remote is unreachable |
 | 12 | [disable-tv-input-service.md](./disable-tv-input-service.md) | Strip the `StreamVaultTvInputService` so the app no longer registers as a "Live TV channel" in the Android TV input picker. Removes the service, setup activity, sync manager, manifest entries, 3 permissions, and 6 Kotlin call-sites. Use when the reseller's server doesn't expose a real TV input feed |
 | 13 | [customise-banners-and-launcher-art.md](./customise-banners-and-launcher-art.md) | Regenerate the TV launcher banner, app launcher icon, and welcome background from the canonical `ic_launcher_vault_art.png`. Includes a Python script that uses `contain` (no edge crop) and the right background color. Use after any brand change |
+| 14 | [white-label-reseller-fork-without-rename.md](./white-label-reseller-fork-without-rename.md) | Produce `app.ehtudo.iptv` from the upstream StreamVault base **without** applying skill #5's mass package rename. Only `applicationId`, brand strings, colors, launcher art, Xtream URL and top-nav tabs change; the upstream `com.streamvault.*` Kotlin sources keep working. Use when shipping a single reseller and a small reviewable diff matters more than source-hygiene. See the skill for when to graduate to skill #5 |
 
 ## Project facts
 
@@ -76,4 +77,5 @@ sqlite3 /tmp/db.sqlite "SELECT COUNT(*) FROM channels WHERE provider_id=1;"
 1. Read this README.
 2. Run [iptv-reseller-simplification-checklist.md](./iptv-reseller-simplification-checklist.md) end-to-end to understand the full state.
 3. Apply only the skills that match the user's current ask. Never combine skills 1–4 with skill 5 (rename) in the same commit — the rename pollutes git diffs and is hard to review.
-4. Verify with `testing-on-xiaomi-miui-device.md` after each change.
+4. **If the goal is to ship `app.ehtudo.iptv` as a single reseller fork with minimum diff**, start with skill 14 (white-label reseller fork without rename) instead of skill 5. Skill 14 is a strict subset of skill 5's outcome — the user-visible identity is the same; only the source-code namespace stays as upstream. Graduate to skill 5 only if a brand-publishability, contributor-onboarding, or multi-reseller need forces it.
+5. Verify with `testing-on-xiaomi-miui-device.md` after each change.
