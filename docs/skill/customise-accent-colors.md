@@ -1,13 +1,13 @@
-# Skill 10 — Customise the accent (brand) color palette
+# Skill 10 â€” Customise the accent (brand) color palette
 
 ## Goal
 
-Rebrand the Eh! IPTV player's **brand color** — the blue accent that shows up on the welcome button, top-nav selected pill, settings rail selection, focus ring, link text, badge backgrounds, and the highlights on selected cards — to a new color (e.g. orange) by editing **3 lines** in a single file, with no logic changes and no theme refactor.
+Rebrand the Eh! IPTV player's **brand color** â€” the blue accent that shows up on the welcome button, top-nav selected pill, settings rail selection, focus ring, link text, badge backgrounds, and the highlights on selected cards â€” to a new color (e.g. orange) by editing **3 lines** in a single file, with no logic changes and no theme refactor.
 
 The user must continue to see:
 - The same dark blue-navy background (it does not change)
 - The same white/gray text palette (it does not change)
-- The same semantic colors for live (red), success (green), warning (amber), error (red) — those are *informational*, not branding
+- The same semantic colors for live (red), success (green), warning (amber), error (red) â€” those are *informational*, not branding
 - The same layout, focus behavior, and animations
 
 Only the **brand-accent family** (`Brand*` in `AppColors`) changes.
@@ -16,7 +16,7 @@ Only the **brand-accent family** (`Brand*` in `AppColors`) changes.
 
 The StreamVault theme was refactored during the Eh! IPTV customisation so that **all** brand colors flow from a single `object AppColors` in one file. There is exactly one source of truth and exactly one place to edit.
 
-### File 1 — `app/src/main/java/app/ehtudo/iptv/ui/design/AppColors.kt` (the truth)
+### File 1 â€” `app/src/main/java/app/ehtudo/iptv/ui/design/AppColors.kt` (the truth)
 
 ```kotlin
 package app.ehtudo.iptv.ui.design
@@ -24,7 +24,7 @@ package app.ehtudo.iptv.ui.design
 import androidx.compose.ui.graphics.Color
 
 object AppColors {
-    // Backgrounds (do NOT change for branding — these are the canvas)
+    // Backgrounds (do NOT change for branding â€” these are the canvas)
     val Canvas          = Color(0xFF07111B)
     val CanvasElevated  = Color(0xFF0B1622)
     val Surface         = Color(0xFF0F1B29)
@@ -33,9 +33,9 @@ object AppColors {
     val SurfaceAccent   = Color(0xFF223754)
 
     // Brand accent (CHANGE THESE for branding)
-    val Brand           = Color(0xFF69A8FF)  // primary accent — focus, link, brand text
-    val BrandMuted      = Color(0x335FA4FF)  // same with 20% alpha — glows, hovers
-    val BrandStrong     = Color(0xFF8BBCFF)  // lighter — selected pill, button fill
+    val Brand           = Color(0xFF69A8FF)  // primary accent â€” focus, link, brand text
+    val BrandMuted      = Color(0x335FA4FF)  // same with 20% alpha â€” glows, hovers
+    val BrandStrong     = Color(0xFF8BBCFF)  // lighter â€” selected pill, button fill
 
     val Focus           = Color(0xFFF4F8FF)  // white-ish focus border
 
@@ -45,11 +45,11 @@ object AppColors {
     val TextTertiary    = Color(0xFF7F8DA5)
     val TextDisabled    = Color(0xFF566173)
 
-    // Semantic (do NOT change for branding — these are *informational*)
+    // Semantic (do NOT change for branding â€” these are *informational*)
     val Live            = Color(0xFFFF5C61)  // "AO VIVO" badge, recording, errors
     val Success         = Color(0xFF4FD39A)  // "ATIVO", OK states
     val Warning         = Color(0xFFFFC766)  // scheduled recording, caution
-    val Info            = Color(0xFF57C9FF)  // "ALCançAR" badge, info chips
+    val Info            = Color(0xFF57C9FF)  // "ALCanÃ§AR" badge, info chips
 
     val Divider         = Color(0x1AF4F8FF)
     val Outline         = Color(0x264C6D95)
@@ -59,9 +59,9 @@ object AppColors {
 }
 ```
 
-### File 2 — `app/src/main/java/app/ehtudo/iptv/ui/theme/Color.kt` (aliases, do not edit)
+### File 2 â€” `app/src/main/java/app/ehtudo/iptv/ui/theme/Color.kt` (aliases, do not edit)
 
-This file re-exports the `AppColors` constants under shorter names (`Primary`, `BackgroundDeep`, `AccentRed`, `OnPrimary`, etc) so the rest of the codebase can reference them semantically. **Do not change hex values here** — they are aliases. If you need a new color, add it to `AppColors` first, then re-export it from `Color.kt`.
+This file re-exports the `AppColors` constants under shorter names (`Primary`, `BackgroundDeep`, `AccentRed`, `OnPrimary`, etc) so the rest of the codebase can reference them semantically. **Do not change hex values here** â€” they are aliases. If you need a new color, add it to `AppColors` first, then re-export it from `Color.kt`.
 
 ```kotlin
 // app/src/main/java/app/ehtudo/iptv/ui/theme/Color.kt
@@ -76,7 +76,7 @@ val AccentCyan    = AppColors.Info
 // ... etc
 ```
 
-The `Theme.kt` Material 3 wrapper then composes these into `lightColorScheme(...)` / `darkColorScheme(...)`. **Do not edit `Theme.kt` for branding** — it is correct as-is.
+The `Theme.kt` Material 3 wrapper then composes these into `lightColorScheme(...)` / `darkColorScheme(...)`. **Do not edit `Theme.kt` for branding** â€” it is correct as-is.
 
 ## The 3 lines that change everything
 
@@ -89,9 +89,9 @@ val BrandMuted  = Color(0x335FA4FF)
 val BrandStrong = Color(0xFF8BBCFF)
 
 // AFTER (Eh! IPTV orange, example):
-val Brand       = Color(0xFFFF6A1A)        // dark orange — brand text, focus border, links
-val BrandMuted  = Color(0x33FF6A1A)        // same orange with 20% alpha — hovers, glows
-val BrandStrong = Color(0xFFFF8A3D)        // light orange — selected pill, button fill
+val Brand       = Color(0xFFFF6A1A)        // dark orange â€” brand text, focus border, links
+val BrandMuted  = Color(0x33FF6A1A)        // same orange with 20% alpha â€” hovers, glows
+val BrandStrong = Color(0xFFFF8A3D)        // light orange â€” selected pill, button fill
 ```
 
 That's it. No XML theme override, no `build.gradle.kts` change, no resource recompile, no Hilt module regen. The KSP cache does not need to be wiped. The 26 composables that import `AppColors.Brand` / `Primary` / `PrimaryLight` will pick up the new values automatically on the next incremental build.
@@ -104,15 +104,15 @@ The `Brand*` family is used in 26 files. When you change it, every one of the fo
 
 | Surface | What the user sees |
 |---|---|
-| Welcome → "Salvar" button background | Orange (was blue) |
-| Welcome → "Fale conosco pelo WhatsApp" link | Orange (was blue) |
-| Settings → "Salvar" button (inline provider form) | Orange |
+| Welcome â†’ "Salvar" button background | Orange (was blue) |
+| Welcome â†’ "Fale conosco pelo WhatsApp" link | Orange (was blue) |
+| Settings â†’ "Salvar" button (inline provider form) | Orange |
 | Top nav selected pill background (TV ao vivo, Filmes, etc) | Orange |
 | Sidebar selected item highlight (Categorias, Provedores) | Orange bar/text |
 | Focus ring around the currently focused element | Orange (was blue, was white before that) |
-| Selected card border outline in lists (canal, filme, série) | Orange (was blue-cyan) |
+| Selected card border outline in lists (canal, filme, sÃ©rie) | Orange (was blue-cyan) |
 | "ATIVO" / "Ativo" badge backgrounds (provider cards) | Orange tint |
-| "Diagnóstico do provedor" section title text | Orange |
+| "DiagnÃ³stico do provedor" section title text | Orange |
 | "Pendente" / progress chip text | Orange |
 | Tab indicator (Material 3 selected tab underline) | Orange |
 | Switch thumb when ON | Orange |
@@ -127,12 +127,12 @@ The `Brand*` family is used in 26 files. When you change it, every one of the fo
 |---|---|
 | App background (canvas, surfaces, cards) | `Canvas*` and `Surface*` are not part of the `Brand` family |
 | Text (primary, secondary, tertiary) | `Text*` is a separate family |
-| "AO VIVO" badge | Uses `AccentRed = AppColors.Live` — semantic, not branding |
+| "AO VIVO" badge | Uses `AccentRed = AppColors.Live` â€” semantic, not branding |
 | "REC" badge (recording) | Uses `AccentRed` |
 | Error states, error text | Uses `AccentRed` |
 | "ATIVO" / "Parcial" status text in green | Uses `AccentGreen = AppColors.Success` |
 | "Scheduled" / caution badges in yellow | Uses `AccentAmber = AppColors.Warning` |
-| "ALCançAR" / info chips in cyan | Uses `AccentCyan = AppColors.Info` |
+| "ALCanÃ§AR" / info chips in cyan | Uses `AccentCyan = AppColors.Info` |
 | Filled input field background | Uses `Surface*` |
 
 The boundary is clean: **`Brand*` = visual identity. `Live` / `Success` / `Warning` / `Info` = semantic information.** They never overlap.
@@ -142,9 +142,9 @@ The boundary is clean: **`Brand*` = visual identity. `Live` / `Success` / `Warni
 ### The three constraints
 
 A `Brand*` family is **3 hex values that must be**:
-1. **Visually related** — they are the same color at three brightness/alpha levels. If you pick three totally different colors the UI will look broken.
-2. **Readable on the dark canvas** (`#0B1622`) — test contrast in your head: a light pastel on a dark navy. Mid-saturation works better than fully saturated.
-3. **Distinct from the semantic colors** — do not pick a green (collides with `Success`), a yellow (collides with `Warning`), or a red (collides with `Live`). Orange, purple, teal, pink, and mid-blue are all safe.
+1. **Visually related** â€” they are the same color at three brightness/alpha levels. If you pick three totally different colors the UI will look broken.
+2. **Readable on the dark canvas** (`#0B1622`) â€” test contrast in your head: a light pastel on a dark navy. Mid-saturation works better than fully saturated.
+3. **Distinct from the semantic colors** â€” do not pick a green (collides with `Success`), a yellow (collides with `Warning`), or a red (collides with `Live`). Orange, purple, teal, pink, and mid-blue are all safe.
 
 ### Recommended formula for a new color
 
@@ -218,7 +218,7 @@ val Live        = Color(0xFFFF6A1A)
 
 **Trade-off:** the "AO VIVO" badge stops being a "red alert" and becomes a brand color. This is fine for single-tenant reseller builds (where the badge is a brand element, not a warning), but breaks the universal "red = live" convention that users expect from YouTube, Netflix, Globoplay, etc. **Only do this if the user explicitly opts in.**
 
-Similarly, `Info` (used for "ALCançAR" badge) can be retinted if you want the "has archive" indicator to match the brand instead of looking like a separate semantic color:
+Similarly, `Info` (used for "ALCanÃ§AR" badge) can be retinted if you want the "has archive" indicator to match the brand instead of looking like a separate semantic color:
 
 ```kotlin
 // BEFORE (cyan):
@@ -232,12 +232,37 @@ val Info = Color(0xFFFFB37A)
 
 - Do **not** create a second `object AppColors` or a `BrandColors` parallel hierarchy. The whole point of the refactor was one source of truth.
 - Do **not** inline `Color(0xFF...)` literals in composables. Always reference `AppColors.X` or the alias in `Color.kt`. If you find yourself wanting to inline a color, it probably belongs in `AppColors`.
-- Do **not** put the brand hex in `build.gradle.kts` as a `buildConfigField`. The color is a Compose runtime value, not a build-time constant.
+- Do **not** hardcode the brand hex in `AppColors.kt` anymore. In the `productFlavors` architecture (skill #14), the hex strings live as `buildConfigField` in the `create("ehtudo") { ... }` block and `AppColors.kt` parses them at runtime via `BuildConfig.BRAND_PRIMARY_COLOR` / `BRAND_SECONDARY_COLOR` / `BRAND_DIM_COLOR`. To rebrand, edit the flavor block â€” never the `Color(...)` literals.
 - Do **not** create a "theme switcher" / dark vs light theme override for the brand. The app is dark-only.
-- Do **not** add a new `R.color.brand_*` in `colors.xml`. The XML color system is not used for Compose — Compose reads from `AppColors.kt` directly.
+- Do **not** add a new `R.color.brand_*` in `colors.xml`. The XML color system is not used for Compose â€” Compose reads from `AppColors.kt` directly.
 - Do **not** edit `Color.kt` to add a new alias without first adding the underlying constant in `AppColors.kt`. The alias file is a pure re-export.
 - Do **not** add a fourth color to the `Brand*` family (e.g. `BrandStronger`, `BrandLighter`). The 3-value scale is what makes the UI feel consistent. If you need a 4th value, you are solving a different problem (probably a new semantic color, not a brand variant).
 - Do **not** swap the `Live` color from red to orange on a multi-tenant / reseller build where "AO VIVO" is meant to read as urgent. Reserve that change for the single-tenant Eh! IPTV build.
+
+## How to rebrand in the `productFlavors` architecture
+
+If you are on the canonical architecture (skill #14), do **not** edit `AppColors.kt` for rebranding. Instead, change the three hex strings in the `productFlavors` block of `app/build.gradle.kts`:
+
+```kotlin
+create("ehtudo") {
+    // ...
+    buildConfigField("String", "BRAND_PRIMARY_COLOR",   "\"#FF6A1A\"")  // was the orange
+    buildConfigField("String", "BRAND_SECONDARY_COLOR", "\"#FF8A3D\"")
+    buildConfigField("String", "BRAND_DIM_COLOR",       "\"#33FF6A1A\"")
+}
+```
+
+`AppColors.kt` then reads the strings at runtime:
+
+```kotlin
+val Brand       = parseHexColor(BuildConfig.BRAND_PRIMARY_COLOR)
+val BrandMuted  = parseHexColor(BuildConfig.BRAND_DIM_COLOR)
+val BrandStrong = parseHexColor(BuildConfig.BRAND_SECONDARY_COLOR)
+```
+
+This is the **only** way to rebrand when there is more than one reseller. The worked palette examples in the "How to pick a new color palette" section above apply directly: paste the hex into the `buildConfigField` value, escape the inner quotes.
+
+For a new reseller, copy the entire `create(...)` block, change the three hex strings, the `BRAND_NAME`, the `applicationId`, and the `XTREAM_DEFAULT_URL` â€” nothing else.
 
 ## Verification after the change
 
@@ -254,13 +279,13 @@ val Info = Color(0xFFFFB37A)
    adb -s d1d1b8f3 exec-out screencap -p > /tmp/brand_after.png
    ```
 4. Walk through the four screens that exercise every brand surface:
-   - **Welcome screen** → confirm "Salvar" button is the new color
-   - **Top nav + TV ao vivo** → confirm the selected pill is the new color
-   - **Settings → Provedores** → confirm the sidebar selection, "Salvar" button, and "ATIVO" badges are the new color
-   - **Any list with a selected card** (Live TV channel list, Movies, Series) → confirm the focus border around the selected card is the new color
+   - **Welcome screen** â†’ confirm "Salvar" button is the new color
+   - **Top nav + TV ao vivo** â†’ confirm the selected pill is the new color
+   - **Settings â†’ Provedores** â†’ confirm the sidebar selection, "Salvar" button, and "ATIVO" badges are the new color
+   - **Any list with a selected card** (Live TV channel list, Movies, Series) â†’ confirm the focus border around the selected card is the new color
 5. Verify the semantic colors did **not** change:
-   - "AO VIVO" badge in TV list → still red
-   - Green "ATIVO" / "Parcial" status text → still green
-   - Yellow scheduled / warning badges → still yellow
+   - "AO VIVO" badge in TV list â†’ still red
+   - Green "ATIVO" / "Parcial" status text â†’ still green
+   - Yellow scheduled / warning badges â†’ still yellow
 6. If you changed `Live` to match the brand (optional), re-verify the "AO VIVO" badge is now the brand color.
-7. Confirm the dark canvas and text colors did not change — they should be identical to the pre-change screenshot.
+7. Confirm the dark canvas and text colors did not change â€” they should be identical to the pre-change screenshot.

@@ -135,6 +135,37 @@ android {
         }
     }
 
+    flavorDimensions += "brand"
+    productFlavors {
+        create("ehtudo") {
+            dimension = "brand"
+            applicationId = "app.ehtudo.iptv"
+
+            // Identity
+            buildConfigField("String",  "BRAND_NAME",                   "\"Eh! IPTV\"")
+            buildConfigField("String",  "WHATSAPP_URL",                 "\"http://wa.me/+5511932055173\"")
+
+            // Xtream defaults
+            buildConfigField("String",  "XTREAM_DEFAULT_URL",           "\"http://dnstv.top/\"")
+            buildConfigField("String",  "XTREAM_DEFAULT_PROVIDER_NAME", "\"Eh! IPTV\"")
+
+            // Brand colors (hex strings, parsed at runtime in AppColors.kt)
+            buildConfigField("String",  "BRAND_PRIMARY_COLOR",          "\"#FF6A1A\"")
+            buildConfigField("String",  "BRAND_SECONDARY_COLOR",        "\"#FF8A3D\"")
+            buildConfigField("String",  "BRAND_DIM_COLOR",              "\"#33FF6A1A\"")
+
+            // Remote config (skill #11)
+            buildConfigField("String",  "REMOTE_CONFIG_URL",            "\"https://ehtudo.app/iptv-config.json\"")
+
+            // Feature flags
+            buildConfigField("boolean", "SHOW_ADVANCED_OPTIONS",        "false")
+            buildConfigField("boolean", "ENABLE_TV_INPUT_SERVICE",      "false")
+
+            // Manifest placeholder (consumed by AndroidManifest.xml ${ENABLE_TV_INPUT_SERVICE})
+            manifestPlaceholders["ENABLE_TV_INPUT_SERVICE"] = "false"
+        }
+    }
+
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
@@ -168,7 +199,7 @@ kotlin {
 kover {
     currentProject {
         createVariant("ci") {
-            add("debug")
+            add("ehtudoDebug")
         }
     }
 }

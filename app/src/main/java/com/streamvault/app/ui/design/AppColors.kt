@@ -1,6 +1,7 @@
 package com.streamvault.app.ui.design
 
 import androidx.compose.ui.graphics.Color
+import com.streamvault.app.BuildConfig
 
 object AppColors {
     val Canvas = Color(0xFF07111B)
@@ -10,9 +11,9 @@ object AppColors {
     val SurfaceEmphasis = Color(0xFF1D2E46)
     val SurfaceAccent = Color(0xFF223754)
 
-    val Brand = Color(0xFF69A8FF)
-    val BrandMuted = Color(0x335FA4FF)
-    val BrandStrong = Color(0xFF8BBCFF)
+    val Brand       = parseHexColor(BuildConfig.BRAND_PRIMARY_COLOR)
+    val BrandMuted  = parseHexColor(BuildConfig.BRAND_DIM_COLOR)
+    val BrandStrong = parseHexColor(BuildConfig.BRAND_SECONDARY_COLOR)
     val Focus = Color(0xFFF4F8FF)
 
     val TextPrimary = Color(0xFFF5F7FB)
@@ -30,4 +31,10 @@ object AppColors {
 
     val HeroTop = Color(0xCC07111B)
     val HeroBottom = Color(0xF207111B)
+}
+
+internal fun parseHexColor(hex: String): Color {
+    val cleaned = hex.removePrefix("#").removePrefix("0x")
+    val long = cleaned.toLong(16)
+    return if (cleaned.length == 8) Color(long) else Color(0xFF000000L or long)
 }

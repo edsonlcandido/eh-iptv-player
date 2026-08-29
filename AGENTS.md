@@ -53,6 +53,14 @@ A passing validation needs:
 - sanitized log evidence showing HLS prepare/read/first-frame or recovery
   behavior
 
+## N-resellers architecture (productFlavors)
+
+The canonical base for any reseller fork is **`master`** (Davidona/develop `f86d4aee` from upstream StreamVault). **Always branch from `master`** — never from `ehiptv/custom-and-simplify` or any other renamed/simplified fork. Those are parallel pre-existing directions that this `productFlavors` architecture replaces; the `productFlavors` + `BuildConfig` approach supersedes the `private const val HARDCODED_XTREAM_URL` constant-injection pattern.
+
+The rebrand lives in `app/build.gradle.kts` as one `flavorDimensions += "brand"` + `productFlavors` block with a `create("<brand>") { ... }` per reseller. The first flavor is **`ehtudo`** for Eh! IPTV (`applicationId = "app.ehtudo.iptv"`); future resellers add another `create("otherReseller") { ... }` block in the same dimension. Each flavor declares ~11 `buildConfigField` constants (`BRAND_NAME`, `WHATSAPP_URL`, `XTREAM_DEFAULT_URL`, `XTREAM_DEFAULT_PROVIDER_NAME`, three `BRAND_*_COLOR`, `REMOTE_CONFIG_URL`, `SHOW_ADVANCED_OPTIONS`, `ENABLE_TV_INPUT_SERVICE`) — the single source of truth for brand identity.
+
+Kotlin sources stay at `com.streamvault.app.*` (no package rename). `applicationId` is independent of the source namespace, so each reseller ships as its own APK with **zero code changes per new reseller** (just a new `create(...)` block + skill #13 launcher-art regeneration + remote-config publish). Full pattern and worked example in `docs/skill/white-label-reseller-fork-without-rename.md`; working plan at `docs/plans/20260829-plan-N-resellers.md`.
+
 Validate more than one live channel when the bug is reported as affecting live
 TV generally. Record the channel names, screenshot count, interval, unique hash
 count, media-session result, and log findings in the final report.

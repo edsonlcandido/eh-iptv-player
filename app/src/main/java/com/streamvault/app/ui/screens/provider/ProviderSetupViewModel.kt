@@ -611,10 +611,10 @@ class ProviderSetupViewModel @Inject constructor(
 
             when (val result = validateAndAddProvider.loginXtream(
                 XtreamProviderSetupCommand(
-                    serverUrl = serverUrl,
+                    serverUrl = serverUrl.ifBlank { com.streamvault.app.BuildConfig.XTREAM_DEFAULT_URL },
                     username = username,
                     password = password,
-                    name = name,
+                    name = name.ifBlank { com.streamvault.app.BuildConfig.XTREAM_DEFAULT_PROVIDER_NAME },
                     httpUserAgent = httpUserAgent,
                     httpHeaders = httpHeaders,
                     xtreamFastSyncEnabled = false,

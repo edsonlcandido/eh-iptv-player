@@ -1,10 +1,20 @@
-# Skill 5 — Package rename: `com.streamvault.*` → `app.ehtudo.iptv`
+> **âš ï¸ DEPRECATED â€” Do not use for new work**
+>
+> The Android Gradle Plugin separates `applicationId` (the public identity) from `namespace` (the source package). With the `productFlavors` architecture in `app/build.gradle.kts`, you can ship `app.ehtudo.iptv` (or any other reseller ID) **without** renaming a single Kotlin file. The mass-rename below is no longer the recommended path.
+>
+> **Superseded by:** [skill #14](./white-label-reseller-fork-without-rename.md) (white-label reseller fork without rename) + the `productFlavors` block in `app/build.gradle.kts`. Reading this skill for historical context is fine; do not apply it to new resellers.
+>
+> **When this skill is still relevant:** if you must also rename the source packages for non-Android reasons (e.g. the codebase is being sold/transferred and a `grep -r streamvault` returning zero is a contract term), this skill is the only path. Otherwise, prefer skill #14.
+
+---
+
+# Skill 5 â€” Package rename: `com.streamvault.*` â†’ `app.ehtudo.iptv`
 
 ## Goal
 
 Mechanically rename the entire package domain so the app's `applicationId`, `namespace`, and Kotlin/Java package declarations all read `app.ehtudo.iptv` (for the `:app` module) and `app.ehtudo.{data,domain,player}` (for the other modules). The old `com.streamvault.app`, `com.streamvault.data`, `com.streamvault.domain`, `com.streamvault.player` packages cease to exist.
 
-This is required to ship as a distinct APK alongside the production `app.ehtudo.iptv` (which is already on the Xiaomi). It is also a hard prerequisite for the Eh! IPTV rebranding.
+This is required to ship as a distinct APK alongside the production `app.ehtudo.iptv` (which is already on the Xiaomi) **only if** you also need the source packages to read `app.ehtudo.iptv`. For the typical "ship one reseller" goal, skill #14 does the same job without the 700-file diff.
 
 ## Scope (do not deviate)
 
@@ -26,7 +36,7 @@ You should be on a clean `ehiptv/<something>` branch with no uncommitted changes
 find . -type f \( -name "*.kt" -o -name "*.java" -o -name "*.gradle.kts" -o -name "*.toml" -o -name "*.pro" -o -name "*.md" -o -name "*.json" -o -name "*.ps1" -o -name "*.xml" \) 2>/dev/null | grep -v build | grep -v ".gradle/" | xargs grep -l "com\.streamvault" 2>/dev/null | wc -l
 ```
 
-## Step 1 — Update Gradle build files
+## Step 1 â€” Update Gradle build files
 
 Edit three files manually so the rename is explicit and reviewable.
 
@@ -49,7 +59,7 @@ namespace = "app.ehtudo.player"
 
 The `:domain` module has no `build.gradle.kts` namespace to change (it is pure Kotlin), but its `package com.streamvault.domain.*` files will be rewritten in step 2.
 
-## Step 2 — Replace content in every tracked source / config file
+## Step 2 â€” Replace content in every tracked source / config file
 
 ```bash
 # Run from repo root.
@@ -62,7 +72,7 @@ git ls-files '*.kt' '*.java' '*.xml' '*.gradle.kts' '*.toml' '*.pro' \
     done
 ```
 
-`sed -i` rewrites the `com.streamvault` prefix to `app.ehtudo` everywhere it appears — declarations, imports, FQCN strings, docs, scripts. The `:app` module is now `app.ehtudo.iptv` (because the `applicationId` is `app.ehtudo.iptv` and the source root is `com/streamvault/app` which becomes `app/ehtudo/app`).
+`sed -i` rewrites the `com.streamvault` prefix to `app.ehtudo` everywhere it appears â€” declarations, imports, FQCN strings, docs, scripts. The `:app` module is now `app.ehtudo.iptv` (because the `applicationId` is `app.ehtudo.iptv` and the source root is `com/streamvault/app` which becomes `app/ehtudo/app`).
 
 `app.ehtudo.iptv` is then produced by the directory move in step 3 (renaming the final `app` segment to `iptv`).
 
@@ -73,7 +83,7 @@ git ls-files '*.kt' '*.java' '*.xml' '*.gradle.kts' '*.toml' '*.pro' '*.md' '*.j
 # Expected output: 0
 ```
 
-## Step 3 — Move physical directories via `git mv`
+## Step 3 â€” Move physical directories via `git mv`
 
 This preserves git history. Run from repo root:
 
@@ -101,21 +111,21 @@ find . -type d -path "*/com/streamvault*" 2>/dev/null | grep -v build | grep -v 
 # Expected: empty
 ```
 
-The `app/src/main/java/com.streamvault.app.zip` snapshot file (a reference archive tracked in git) should **not** be renamed — it predates the project. Move it back if step 3's logic accidentally relocates it.
+The `app/src/main/java/com.streamvault.app.zip` snapshot file (a reference archive tracked in git) should **not** be renamed â€” it predates the project. Move it back if step 3's logic accidentally relocates it.
 
-## Step 4 — AndroidManifest, proguard, docs
+## Step 4 â€” AndroidManifest, proguard, docs
 
 Step 2 already rewrote:
 
-- `app/src/main/AndroidManifest.xml` — `app.ehtudo.plugin.API`, the cast provider FQCN, etc.
-- `app/proguard-rules.pro` — any FQCN references.
-- `docs/DEV_SEEDING.md`, `docs/GOOGLE_DRIVE_SETUP.md`, `docs/PLUGIN_API.md` — `pm clear com.streamvault.app`, plugin API namespace, etc.
-- `tools/cast-validation.ps1` — `$PackageName = "com.streamvault.app"`.
-- `AGENTS.md` — runtime `package=com.streamvault.app` references in adb commands.
+- `app/src/main/AndroidManifest.xml` â€” `app.ehtudo.plugin.API`, the cast provider FQCN, etc.
+- `app/proguard-rules.pro` â€” any FQCN references.
+- `docs/DEV_SEEDING.md`, `docs/GOOGLE_DRIVE_SETUP.md`, `docs/PLUGIN_API.md` â€” `pm clear com.streamvault.app`, plugin API namespace, etc.
+- `tools/cast-validation.ps1` â€” `$PackageName = "com.streamvault.app"`.
+- `AGENTS.md` â€” runtime `package=com.streamvault.app` references in adb commands.
 
 If you find anything still mentioning `com.streamvault` in any of those, repeat the targeted `sed` for the file in question.
 
-## Step 5 — Wipe stale KSP / Hilt caches
+## Step 5 â€” Wipe stale KSP / Hilt caches
 
 Hilt and KSP cache class references to the old FQCN. Without a clean, the next build dies with `Could not find class file for 'app.ehtudo.app.StreamVaultApp'`.
 
@@ -125,16 +135,16 @@ rm -rf app/build/tmp
 rm -rf data/build/kspCaches player/build/kspCaches domain/build/kspCaches
 ```
 
-## Step 6 — Build
+## Step 6 â€” Build
 
 ```bash
 ./gradlew clean --no-daemon
 ./gradlew :app:assembleDebug --no-daemon
 ```
 
-First build is ~10 min from cold. Expect only pre-existing warnings (KT-73255, unchecked casts in the ViewModels — see `app/src/main/java/app/ehtudo/iptv/ui/screens/movies/MoviesViewModel.kt` etc.). Any `Unresolved reference` error points to a file missed by step 2 or a stale cache from step 5.
+First build is ~10 min from cold. Expect only pre-existing warnings (KT-73255, unchecked casts in the ViewModels â€” see `app/src/main/java/app/ehtudo/iptv/ui/screens/movies/MoviesViewModel.kt` etc.). Any `Unresolved reference` error points to a file missed by step 2 or a stale cache from step 5.
 
-## Step 7 — Install and launch
+## Step 7 â€” Install and launch
 
 ```bash
 # Uninstall the old package (if it was previously installed under com.streamvault.app.debug)
@@ -160,5 +170,5 @@ Treat it as a standalone commit on its own branch (`ehiptv/rename-packages`), me
 - Do **not** use a Python or Java rename script. `sed` + `git mv` covers every case and the diff is reviewable per file.
 - Do **not** rename the `:app` module's last segment to anything other than `iptv` if the goal is to match the production `app.ehtudo.iptv`. Different suffixes (e.g. `app.ehtudo.player`, `app.ehtudo.viewer`) cause confusion and Play Store rejection.
 - Do **not** rewrite the old `app/src/main/java/com.streamvault.app.zip` reference archive. It is intentionally a frozen snapshot.
-- Do **not** rename `settings.gradle.kts` `rootProject.name` — this is the *Gradle* project name (used for IDE display), not the applicationId. They can diverge.
+- Do **not** rename `settings.gradle.kts` `rootProject.name` â€” this is the *Gradle* project name (used for IDE display), not the applicationId. They can diverge.
 - Do **not** skip step 5 (cache wipe). The build *will* fail with stale KSP generated code referencing the old FQCN.

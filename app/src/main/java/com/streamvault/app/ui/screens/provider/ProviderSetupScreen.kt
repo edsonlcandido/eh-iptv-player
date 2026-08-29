@@ -71,6 +71,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.tv.material3.*
+import com.streamvault.app.BuildConfig
 import com.streamvault.app.R
 import com.streamvault.app.device.rememberIsTelevisionDevice
 import com.streamvault.app.pairing.ProviderQrPairingState
@@ -146,7 +147,7 @@ private fun StalkerCompatibilitySelector(
                     .filterNot { it == StalkerProtocolPreference.MINISTRA_API_V3 }
                     .forEach { option ->
                     SmallActionButton(
-                        text = if (option == protocol) "✓ ${option.name.replace('_', ' ')}" else option.name.replace('_', ' '),
+                        text = if (option == protocol) "âœ“ ${option.name.replace('_', ' ')}" else option.name.replace('_', ' '),
                         onClick = {
                             onProtocolSelected(option)
                             onProfileSelected(StalkerCompatibilityProfileIds.AUTO)
@@ -163,7 +164,7 @@ private fun StalkerCompatibilitySelector(
         AnimatedVisibility(showProfiles) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 SmallActionButton(
-                    text = if (profileId == StalkerCompatibilityProfileIds.AUTO) "✓ Automatic" else "Automatic",
+                    text = if (profileId == StalkerCompatibilityProfileIds.AUTO) "âœ“ Automatic" else "Automatic",
                     onClick = {
                         onProfileSelected(StalkerCompatibilityProfileIds.AUTO)
                         showProfiles = false
@@ -183,9 +184,9 @@ private fun StalkerCompatibilitySelector(
                             val experimental = option.verification == StalkerProfileVerification.EXPERIMENTAL
                             SmallActionButton(
                                 text = buildString {
-                                    if (option.id == profileId) append("✓ ")
+                                    if (option.id == profileId) append("âœ“ ")
                                     append(option.displayName)
-                                    if (experimental) append(" — EXPERIMENTAL")
+                                    if (experimental) append(" â€” EXPERIMENTAL")
                                 },
                                 onClick = {
                                     onProfileSelected(option.id)
@@ -201,7 +202,7 @@ private fun StalkerCompatibilitySelector(
                         color = AccentAmber
                     )
                     SmallActionButton(
-                        text = if (profileId == StalkerCompatibilityProfileIds.CUSTOM) "✓ Custom profile" else "Custom profile",
+                        text = if (profileId == StalkerCompatibilityProfileIds.CUSTOM) "âœ“ Custom profile" else "Custom profile",
                         onClick = {
                             onProfileSelected(StalkerCompatibilityProfileIds.CUSTOM)
                             showProfiles = false
@@ -1097,7 +1098,7 @@ private fun ProviderFormContent(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Playlist name ן¿½ always shown
+            // Playlist name ×ŸÂ¿Â½ always shown
             ProviderTextField(
                 value = name,
                 onValueChange = onNameChange,
@@ -1116,16 +1117,18 @@ private fun ProviderFormContent(
 
             when (sourceType) {
                 SourceType.XTREAM -> {
-                    ProviderTextField(
-                        value = serverUrl, onValueChange = onServerUrlChange,
-                        placeholder = androidx.compose.ui.res.stringResource(R.string.setup_server_hint),
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrectEnabled = false,
-                            keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
-                            imeAction = ImeAction.Next
+                    if (BuildConfig.SHOW_ADVANCED_OPTIONS) {
+                        ProviderTextField(
+                            value = serverUrl, onValueChange = onServerUrlChange,
+                            placeholder = androidx.compose.ui.res.stringResource(R.string.setup_server_hint),
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.None,
+                                autoCorrectEnabled = false,
+                                keyboardType = if (isTelevisionDevice) KeyboardType.Ascii else KeyboardType.Uri,
+                                imeAction = ImeAction.Next
+                            )
                         )
-                    )
+                    }
                     ProviderTextField(
                         value = username, onValueChange = onUsernameChange,
                         placeholder = androidx.compose.ui.res.stringResource(R.string.setup_user_hint),
@@ -1147,6 +1150,7 @@ private fun ProviderFormContent(
                             imeAction = ImeAction.Done
                         )
                     )
+                    if (BuildConfig.SHOW_ADVANCED_OPTIONS) {
                     AdvancedProviderOptionsSection(
                         sourceType = sourceType,
                         uiState = uiState,
@@ -1202,6 +1206,7 @@ private fun ProviderFormContent(
                         onUpdateStalkerRequestRule = onUpdateStalkerRequestRule,
                         onRemoveStalkerRequestRule = onRemoveStalkerRequestRule
                     )
+                    }
                     FormErrors(uiState.validationError, uiState.error)
                     ActionButton(
                         text = when {
@@ -1245,6 +1250,7 @@ private fun ProviderFormContent(
                         onProtocolSelected = onSelectStalkerProtocolPreference,
                         onProfileSelected = onSelectStalkerProfile
                     )
+                    if (BuildConfig.SHOW_ADVANCED_OPTIONS) {
                     AdvancedProviderOptionsSection(
                         sourceType = sourceType,
                         uiState = uiState,
@@ -1300,6 +1306,7 @@ private fun ProviderFormContent(
                         onUpdateStalkerRequestRule = onUpdateStalkerRequestRule,
                         onRemoveStalkerRequestRule = onRemoveStalkerRequestRule
                     )
+                    }
                     FormErrors(uiState.validationError, uiState.error)
                     ActionButton(
                         text = when {
@@ -1325,6 +1332,7 @@ private fun ProviderFormContent(
                         placeholder = androidx.compose.ui.res.stringResource(R.string.setup_m3u_hint),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done)
                     )
+                    if (BuildConfig.SHOW_ADVANCED_OPTIONS) {
                     AdvancedProviderOptionsSection(
                         sourceType = sourceType,
                         uiState = uiState,
@@ -1360,6 +1368,7 @@ private fun ProviderFormContent(
                         stalkerSignature = stalkerSignature,
                         onStalkerSignatureChange = onStalkerSignatureChange
                     )
+                    }
                     FormErrors(uiState.validationError, uiState.error)
                     ActionButton(
                         text = when {
@@ -1383,6 +1392,7 @@ private fun ProviderFormContent(
                     fileImportError?.let {
                         Text(text = it, style = MaterialTheme.typography.bodyMedium, color = ErrorColor)
                     }
+                    if (BuildConfig.SHOW_ADVANCED_OPTIONS) {
                     AdvancedProviderOptionsSection(
                         sourceType = sourceType,
                         uiState = uiState,
@@ -1418,6 +1428,7 @@ private fun ProviderFormContent(
                         stalkerSignature = stalkerSignature,
                         onStalkerSignatureChange = onStalkerSignatureChange
                     )
+                    }
                     FormErrors(uiState.validationError, uiState.error)
                     ActionButton(
                         text = when {
@@ -2540,7 +2551,7 @@ private fun FormErrors(validationError: String?, error: String?) {
     }
 }
 
-// ??? Source type selector ן¿½ wide layout (left sidebar) ????????????????????????
+// ??? Source type selector ×ŸÂ¿Â½ wide layout (left sidebar) ????????????????????????
 
 @Composable
 private fun SourceTypeSelectorPanel(
@@ -2695,7 +2706,7 @@ private fun SourceTypeCard(
     }
 }
 
-// ??? Source type row ן¿½ narrow layout (top tabs) ???????????????????????????????
+// ??? Source type row ×ŸÂ¿Â½ narrow layout (top tabs) ???????????????????????????????
 
 @Composable
 private fun SourceTypeTabRow(
@@ -2747,7 +2758,7 @@ private fun SourceTypeTabRow(
 // ??? ProviderTextField ????????????????????????????????????????????????????????
 //
 // Key fix: uses BasicTextField with decorationBox and tracks focus via
-// onFocusEvent { it.hasFocus } ן¿½ hasFocus is true when this node OR any
+// onFocusEvent { it.hasFocus } ×ŸÂ¿Â½ hasFocus is true when this node OR any
 // descendant (the actual cursor/text composable) has focus. The old approach
 // used onFocusChanged { isFocused } on an outer Box, which became false the
 // moment the inner BasicTextField took focus, breaking keyboard scroll.
@@ -3381,7 +3392,7 @@ private fun formatDriveSnapshotDetails(snapshot: DriveBackupSnapshot): String {
         ).format(java.util.Date(it))
     } ?: "Date unavailable"
     val size = if (snapshot.sizeBytes > 0L) "${snapshot.sizeBytes / 1024L} KB" else "Size unavailable"
-    return "$date · $size"
+    return "$date Â· $size"
 }
 
 @Composable
@@ -3481,7 +3492,7 @@ private fun TabButton(text: String, isSelected: Boolean, onClick: () -> Unit, ba
     }
 }
 
-// ─── Revealing password visual transformation ─────────────────────────────────
+// â”€â”€â”€ Revealing password visual transformation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private class RevealingPasswordVisualTransformation(
     private val revealedIndex: Int?
@@ -3496,7 +3507,7 @@ private class RevealingPasswordVisualTransformation(
     }
 }
 
-// ─── File cleanup helpers ─────────────────────────────────────────────────────
+// â”€â”€â”€ File cleanup helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private fun cleanupOldImportedM3uFiles(
     filesDir: java.io.File,

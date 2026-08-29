@@ -1,4 +1,4 @@
-﻿# Skill 9 — All customisation surfaces and their defaults
+# Skill 9 — All customisation surfaces and their defaults
 
 ## Goal
 
@@ -29,18 +29,36 @@ The app has three layers of configuration, in increasing order of how easily the
 | `XTREAM_DEV_*` | empty in release; from `local.properties` in debug | `BuildConfig.XTREAM_DEV_SERVER`, `…_USERNAME`, `…_PASSWORD`, `…_NAME`. Read by `WelcomeViewModel.maybeSeedDevProvider()`. In production builds always empty. |
 | `M3U_DEV_URL`, `M3U_DEV_NAME` | empty in release; from `local.properties` in debug | Same dev-seeding path. |
 
-### Brand constants (Kotlin `private const val`)
+### Brand constants (BuildConfig fields, source of truth)
 
-These must be byte-identical in the two files that hold them. They are the single source of truth for the Xtream server.
+All brand identity lives in the `productFlavors` block of `app/build.gradle.kts`, exposed to the code as `BuildConfig.*`. The values below are the Eh! IPTV reseller (flavor `ehtudo`). Each new reseller = a new `create(...)` block in the same `productFlavors` group.
 
-| File | Symbol | Default |
+| `BuildConfig.*` field | Type | Default (Eh! IPTV) | Where it shows up |
+|---|---|---|---|
+| `BRAND_NAME` | `String` | `"Eh! IPTV"` | `welcome_brand_title`, About section, brand surfaces |
+| `XTREAM_DEFAULT_URL` | `String` | `"http://dnstv.top/"` | `XtreamProviderSetupCommand.serverUrl` in welcome + edit flows |
+| `XTREAM_DEFAULT_PROVIDER_NAME` | `String` | `"Eh! IPTV"` | `XtreamProviderSetupCommand.name` in welcome + edit flows |
+| `WHATSAPP_URL` | `String` | `"http://wa.me/+5511932055173"` | The "Fale conosco pelo WhatsApp" link below the Salvar button |
+| `REMOTE_CONFIG_URL` | `String` | `"https://ehtudo.app/iptv-config.json"` | Skill #11's 3-tier fallback (remote → DataStore → hardcoded) |
+| `BRAND_PRIMARY_COLOR` | `String` (hex) | `"#FF6A1A"` | `AppColors.Brand` |
+| `BRAND_SECONDARY_COLOR` | `String` (hex) | `"#FF8A3D"` | `AppColors.BrandStrong` |
+| `BRAND_DIM_COLOR` | `String` (hex) | `"#33FF6A1A"` | `AppColors.BrandMuted` |
+| `SHOW_ADVANCED_OPTIONS` | `boolean` | `false` | Gates `AdvancedProviderOptionsSection` in `ProviderSetupScreen` |
+| `ENABLE_TV_INPUT_SERVICE` | `boolean` | `false` | Manifest placeholder `android:enabled="${ENABLE_TV_INPUT_SERVICE}"` on the TV input `<service>` |
+
+Consumer sites (unchanged across resellers; only the value moves):
+
+| Consumer | File | Reads |
 |---|---|---|
-| `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt:80` | `HARDCODED_XTREAM_URL` | `"http://dnstv.top/"` |
-| same file:81 | `DEFAULT_PROVIDER_NAME` | `"Eh! IPTV"` |
-| `app/src/main/java/app/ehtudo/iptv/ui/screens/provider/ProviderSetupScreen.kt:118` | `HARDCODED_XTREAM_URL` | `"http://dnstv.top/"` |
-| same file:119 | `DEFAULT_PROVIDER_NAME` | `"StreamVault"` (legacy, only used in the power-user edit flow — does **not** show up in the welcome path) |
+| Welcome form, `loginXtream` | `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt` | `XTREAM_DEFAULT_URL`, `XTREAM_DEFAULT_PROVIDER_NAME` |
+| Welcome form, WhatsApp link | same file | `WHATSAPP_URL` |
+| Edit provider, `onLoginXtream` (wide + narrow layouts) | `app/src/main/java/app/ehtudo/iptv/ui/screens/provider/ProviderSetupScreen.kt` | `XTREAM_DEFAULT_URL`, `XTREAM_DEFAULT_PROVIDER_NAME` |
+| Theme palette | `app/src/main/java/app/ehtudo/iptv/ui/design/AppColors.kt` | `BRAND_PRIMARY_COLOR`, `BRAND_SECONDARY_COLOR`, `BRAND_DIM_COLOR` |
+| Remote config fetch | `app/src/main/java/app/ehtudo/iptv/data/config/RemoteConfigRepository.kt` (skill #11) | `REMOTE_CONFIG_URL` |
+| Advanced options visibility | `ProviderSetupScreen.kt` | `SHOW_ADVANCED_OPTIONS` |
+| TV input service registration | `app/src/main/AndroidManifest.xml` | `ENABLE_TV_INPUT_SERVICE` (manifest placeholder) |
 
-The Welcome flow always sends `DEFAULT_PROVIDER_NAME = "Eh! IPTV"`. The `ProviderSetupScreen` power-user flow is the only path that still has the older `"StreamVault"` literal — leave it alone unless you also flip the brand elsewhere.
+> **Legacy:** the older `private const val HARDCODED_XTREAM_URL` / `DEFAULT_PROVIDER_NAME` at `WelcomeScreen.kt:80-81` and `ProviderSetupScreen.kt:118-119` still exists on branches that have not migrated to the `productFlavors` architecture. See [skill #14](./white-label-reseller-fork-without-rename.md) for the migration. On the canonical `ehtudo` flavor these constants are gone and the values come from `BuildConfig`.
 
 ### Time / locale
 

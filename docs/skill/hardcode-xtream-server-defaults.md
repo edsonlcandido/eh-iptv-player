@@ -1,10 +1,22 @@
-# Skill 3 — Hardcode the Xtream server defaults
+> **âš ï¸ DEPRECATED â€” Do not use for new work**
+>
+> The Xtream server URL and the default provider name are no longer hardcoded as `private const val` in Kotlin. They are `buildConfigField` values inside the `productFlavors` block in `app/build.gradle.kts`, exposed to the code as `BuildConfig.XTREAM_DEFAULT_URL` and `BuildConfig.XTREAM_DEFAULT_PROVIDER_NAME`. The two files (`WelcomeScreen.kt:80` and `ProviderSetupScreen.kt:111`) no longer hold these constants.
+>
+> **Superseded by:** [skill #14](./white-label-reseller-fork-without-rename.md) â€” see the "Scalable architecture: `productFlavors`" section for the canonical pattern.
+>
+> **What still applies from this skill:** the "where the constants are USED" callouts (the 4 consumer sites) are still valid â€” the consumer sites are unchanged, only the source of the value moved. The "what stays parameterised" and "what stays hidden" sections are still accurate.
+>
+> **What is now wrong:** the "Where to put them" section, the "two files must stay in sync" rule, the "Anti-patterns" section (specifically the "do not read from BuildConfig" rule), and the "rotating the server = changing two lines" goal.
+
+---
+
+# Skill 3 â€” Hardcode the Xtream server defaults
 
 ## Goal
 
-For the Eh! IPTV reseller build, the Xtream server URL and the default provider name are **never** user-editable. They live as `private const val` at the top of exactly two files, and every code path that builds an `XtreamProviderSetupCommand` references them.
+For the Eh! IPTV reseller build, the Xtream server URL and the default provider name are **never** user-editable. They live as `buildConfigField` values in the `productFlavors` block of `app/build.gradle.kts`, exposed to the code as `BuildConfig.XTREAM_DEFAULT_URL` and `BuildConfig.XTREAM_DEFAULT_PROVIDER_NAME`.
 
-The two constants are the single source of truth. Rotating the reseller's server = changing two lines.
+The two `BuildConfig` fields are the single source of truth. Rotating the reseller's server = changing one value in the flavor block.
 
 ## The canonical values
 
@@ -13,11 +25,11 @@ private const val HARDCODED_XTREAM_URL = "http://dnstv.top/"
 private const val DEFAULT_PROVIDER_NAME = "Eh! IPTV"
 ```
 
-URL must be lowercase, end in `/`, scheme `http` (or `https` if you have a cert — the existing `network_security_config.xml` permits cleartext globally so `http://` works out of the box).
+URL must be lowercase, end in `/`, scheme `http` (or `https` if you have a cert â€” the existing `network_security_config.xml` permits cleartext globally so `http://` works out of the box).
 
 Provider name should be the user-facing brand. It shows up:
 - As the playlist label in the Dashboard.
-- In Settings → Providers list.
+- In Settings â†’ Providers list.
 - In the diagnostic chip on Settings.
 - In `providerDao.getActive()?.name` queried by every screen.
 
@@ -25,7 +37,7 @@ Provider name should be the user-facing brand. It shows up:
 
 Exactly these two files, at the top of the file, inside a single private file-level comment block:
 
-### File 1 — `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt`
+### File 1 â€” `app/src/main/java/app/ehtudo/iptv/ui/screens/welcome/WelcomeScreen.kt`
 
 Add (anywhere in the top-level `// ??? Hardcoded Xtream defaults ???` block, before the `WelcomeViewModel` class):
 
@@ -38,9 +50,9 @@ private const val HARDCODED_XTREAM_URL = "http://dnstv.top/"
 private const val DEFAULT_PROVIDER_NAME = "Eh! IPTV"
 ```
 
-### File 2 — `app/src/main/java/app/ehtudo/iptv/ui/screens/provider/ProviderSetupScreen.kt`
+### File 2 â€” `app/src/main/java/app/ehtudo/iptv/ui/screens/provider/ProviderSetupScreen.kt`
 
-Same comment block, same constants. This is the "power user" path (settings → edit provider); it must produce an `XtreamProviderSetupCommand` that points at the same server.
+Same comment block, same constants. This is the "power user" path (settings â†’ edit provider); it must produce an `XtreamProviderSetupCommand` that points at the same server.
 
 ## Where the constants are USED
 
@@ -53,21 +65,21 @@ Search for `HARDCODED_XTREAM_URL` and `DEFAULT_PROVIDER_NAME` to find every cons
 | `ProviderSetupScreen.kt` (wide layout) | inside `ProviderFormContent(...)` `onLoginXtream` lambda | The wide-screen save action |
 | `ProviderSetupScreen.kt` (narrow layout) | inside the second `ProviderFormContent(...)` `onLoginXtream` lambda | The narrow-screen save action |
 
-If you add a new entry point (e.g. a QR-pairing flow, a settings quick-action button), it must reference the same two constants — do **not** add a new magic string.
+If you add a new entry point (e.g. a QR-pairing flow, a settings quick-action button), it must reference the same two constants â€” do **not** add a new magic string.
 
 ## What stays parameterized
 
 These fields remain per-user, even on the simplified form:
 
-- `username` — required, plain text.
-- `password` — required, plain text (no mask, per the user's spec).
-- `httpUserAgent` — defaults to `""` in the `XtreamProviderSetupCommand`. The user never types it.
-- `httpHeaders` — defaults to `""`. The user never types it.
-- `epgSyncMode` — defaulted to `BACKGROUND` (or whatever is in the user's `ProviderEpgSyncMode` preferences).
-- `xtreamLiveSyncMode` — defaulted to `AUTO`.
-- `guideSourcePolicy` — defaulted to `AUTO`.
-- `channelLogoSourcePolicy` — defaulted to `SUPPLIER_PREFERRED`.
-- `xtreamFastSyncEnabled` — set to `true` in the welcome path so the user sees content fast.
+- `username` â€” required, plain text.
+- `password` â€” required, plain text (no mask, per the user's spec).
+- `httpUserAgent` â€” defaults to `""` in the `XtreamProviderSetupCommand`. The user never types it.
+- `httpHeaders` â€” defaults to `""`. The user never types it.
+- `epgSyncMode` â€” defaulted to `BACKGROUND` (or whatever is in the user's `ProviderEpgSyncMode` preferences).
+- `xtreamLiveSyncMode` â€” defaulted to `AUTO`.
+- `guideSourcePolicy` â€” defaulted to `AUTO`.
+- `channelLogoSourcePolicy` â€” defaulted to `SUPPLIER_PREFERRED`.
+- `xtreamFastSyncEnabled` â€” set to `true` in the welcome path so the user sees content fast.
 
 These flow through `ValidateAndAddProvider.loginXtream` and land in the persisted `Provider` row untouched.
 
@@ -89,10 +101,10 @@ These flow through `ValidateAndAddProvider.loginXtream` and land in the persiste
 
 When the reseller moves to a new domain (e.g. `http://newserver.com/`):
 
-1. `git grep HARDCODED_XTREAM_URL` should return exactly 4 hits (the two files × two `onLoginXtream` lambda call sites each contribute 1; `maybeSeedDevProvider` in `WelcomeScreen` is the 3rd; the literal definition is the 4th, counted twice for two files).
+1. `git grep HARDCODED_XTREAM_URL` should return exactly 4 hits (the two files Ã— two `onLoginXtream` lambda call sites each contribute 1; `maybeSeedDevProvider` in `WelcomeScreen` is the 3rd; the literal definition is the 4th, counted twice for two files).
 2. Edit the literal in both files. The two must stay identical.
 3. Update `docs/DEV_SEEDING.md` and any onboarding scripts that reference the old host.
-4. Bump the cache-busting build version (`versionCode` and `versionName` in `app/build.gradle.kts`) so users get the new URL on the next install — otherwise the old URL is still baked into their already-installed APK.
+4. Bump the cache-busting build version (`versionCode` and `versionName` in `app/build.gradle.kts`) so users get the new URL on the next install â€” otherwise the old URL is still baked into their already-installed APK.
 
 ## Anti-patterns (do not)
 
