@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">StreamVault</string>
+    <string name="app_name">Eh! IPTV</string>
 
     
     <string name="nav_home">Home</string>
@@ -19,6 +19,13 @@
     <string name="welcome_version">v1.0.3</string>
     <string name="welcome_loading_title">Preparing your library</string>
     <string name="welcome_loading_subtitle">Opening the right screen for this device.</string>
+    <!-- Simplified onboarding for end users (skill #1) -->
+    <string name="welcome_brand_title">Eh! IPTV</string>
+    <string name="welcome_username_hint">Usuário</string>
+    <string name="welcome_password_hint">Senha</string>
+    <string name="welcome_save">Salvar</string>
+    <string name="welcome_username_required">Digite seu usuário</string>
+    <string name="welcome_password_required">Digite sua senha</string>
     <string name="sync_section_live">Live</string>
     <string name="sync_section_vod">VOD</string>
     <string name="sync_section_series">Series</string>

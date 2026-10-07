@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,9 +11,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -33,7 +40,6 @@ import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.SurfaceDefaults
-import androidx.tv.material3.Text
 import com.streamvault.app.BuildConfig
 import com.streamvault.app.R
 import com.streamvault.app.ui.components.shell.StatusPill
@@ -45,6 +51,7 @@ import com.streamvault.domain.repository.ProviderRepository
 import com.streamvault.domain.sync.Section
 import com.streamvault.domain.usecase.M3uProviderSetupCommand
 import com.streamvault.domain.usecase.ValidateAndAddProvider
+import com.streamvault.domain.usecase.ValidateAndAddProviderResult
 import com.streamvault.domain.usecase.XtreamProviderSetupCommand
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -69,6 +76,27 @@ class WelcomeViewModel @Inject constructor(
     private val _hasProviders = MutableStateFlow<Boolean?>(null)
     val hasProviders: StateFlow<Boolean?> = _hasProviders.asStateFlow()
 
+    private val _username = MutableStateFlow("")
+    val username: StateFlow<String> = _username.asStateFlow()
+
+    private val _password = MutableStateFlow("")
+    val password: StateFlow<String> = _password.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _syncCompleted = MutableStateFlow(false)
+    /**
+     * True once the initial post-login sync has finished (so the welcome screen can show
+     * the sync progress until the user actually lands on a populated Home). The signal
+     * flips on the first non-null → null transition of [syncProgress] after a provider
+     * has been added. It never resets to false, so the LaunchedEffect only fires once.
+     */
+    val syncCompleted: StateFlow<Boolean> = _syncCompleted.asStateFlow()
+
     private val acceptingProgress = MutableStateFlow(true)
 
     val syncProgress: StateFlow<SyncProgressAggregate?> =
@@ -88,6 +116,60 @@ class WelcomeViewModel @Inject constructor(
                 .filterNotNull()
                 .first()
             acceptingProgress.value = false
+        }
+        // Track the sync progress so the welcome can show the sync screen until done.
+        // SyncProgressBus.aggregate is null when no sync is active, non-null while syncing.
+        // We flip syncCompleted on the first non-null → null transition (sync finished).
+        viewModelScope.launch {
+            var hasSeenProgress = false
+            syncProgress.collect { progress ->
+                if (progress != null) {
+                    hasSeenProgress = true
+                } else if (hasSeenProgress && _hasProviders.value == true) {
+                    _syncCompleted.value = true
+                }
+            }
+        }
+    }
+
+    fun setUsername(value: String) {
+        _username.value = value
+        if (_error.value != null) _error.value = null
+    }
+
+    fun setPassword(value: String) {
+        _password.value = value
+        if (_error.value != null) _error.value = null
+    }
+
+    fun loginXtream() {
+        val username = _username.value.trim()
+        val password = _password.value
+        when {
+            username.isBlank() -> { _error.value = USERNAME_REQUIRED; return }
+            password.isBlank() -> { _error.value = PASSWORD_REQUIRED; return }
+        }
+        _error.value = null
+        _isLoading.value = true
+        viewModelScope.launch {
+            val result = validateAndAddProvider.loginXtream(
+                XtreamProviderSetupCommand(
+                    serverUrl = BuildConfig.XTREAM_DEFAULT_URL,
+                    username = username,
+                    password = password,
+                    name = BuildConfig.XTREAM_DEFAULT_PROVIDER_NAME,
+                    xtreamFastSyncEnabled = true
+                )
+            )
+            _isLoading.value = false
+            _error.value = when (result) {
+                is ValidateAndAddProviderResult.Success -> null
+                is ValidateAndAddProviderResult.SavedWithWarning -> null
+                is ValidateAndAddProviderResult.ValidationError -> result.message
+                is ValidateAndAddProviderResult.TransportConsentRequired -> null
+                is ValidateAndAddProviderResult.VerificationInconclusive -> result.message
+                is ValidateAndAddProviderResult.Error -> result.message
+            }
         }
     }
 
@@ -120,23 +202,33 @@ class WelcomeViewModel @Inject constructor(
             )
         }
     }
+
+    companion object {
+        // Sentinel keys for error messages; the actual localized strings live in strings.xml.
+        // Using sentinel constants lets the composable read the right R.string.* via a small mapping.
+        const val USERNAME_REQUIRED = "username_required"
+        const val PASSWORD_REQUIRED = "password_required"
+    }
 }
 
 @Composable
 fun WelcomeScreen(
     onNavigateToHome: () -> Unit,
     startupReady: Boolean = true,
-    onNavigateToSetup: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onNavigateToSetup: () -> Unit = {},
     viewModel: WelcomeViewModel = hiltViewModel()
 ) {
     val hasProviders by viewModel.hasProviders.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val syncProgress by viewModel.syncProgress.collectAsStateWithLifecycle()
+    val syncCompleted by viewModel.syncCompleted.collectAsStateWithLifecycle()
 
-    LaunchedEffect(hasProviders, startupReady) {
-        when (hasProviders) {
-            true -> if (startupReady) onNavigateToHome()
-            false -> Unit
-            null -> Unit
+    // Navigate to Home only after both: (a) a provider exists, (b) the initial sync has
+    // completed. This keeps the WelcomeLoadingCard (with section progress) visible during
+    // the post-login sync instead of flashing past it.
+    LaunchedEffect(hasProviders, syncCompleted, startupReady) {
+        if (hasProviders == true && syncCompleted && startupReady) {
+            onNavigateToHome()
         }
     }
 
@@ -155,15 +247,19 @@ fun WelcomeScreen(
                 )
         )
 
-        when (hasProviders) {
-            false -> WelcomeStartCard(
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToSetup = onNavigateToSetup,
+        when {
+            isLoading -> WelcomeLoadingCard(
+                syncProgress = syncProgress,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(32.dp)
             )
-
+            hasProviders == false -> WelcomeStartCard(
+                viewModel = viewModel,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(32.dp)
+            )
             else -> WelcomeLoadingCard(
                 syncProgress = syncProgress,
                 modifier = Modifier
@@ -185,9 +281,9 @@ private fun WelcomeLoadingCard(
         colors = SurfaceDefaults.colors(containerColor = AppColors.Surface.copy(alpha = 0.9f))
     ) {
         Column(
-        modifier = Modifier.padding(horizontal = 36.dp, vertical = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+            modifier = Modifier.padding(horizontal = 36.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             val representativeProgress = syncProgress?.representative?.progress
             val pillLabel = if (representativeProgress != null) {
                 stringResource(sectionLabelRes(representativeProgress.section))
@@ -256,60 +352,117 @@ private fun WelcomeLoadingCard(
 
 @Composable
 private fun WelcomeStartCard(
-    onNavigateToHome: () -> Unit,
-    onNavigateToSetup: () -> Unit,
+    viewModel: WelcomeViewModel,
     modifier: Modifier = Modifier
 ) {
+    val username by viewModel.username.collectAsStateWithLifecycle()
+    val password by viewModel.password.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val errorText = when (error) {
+        WelcomeViewModel.USERNAME_REQUIRED -> stringResource(R.string.welcome_username_required)
+        WelcomeViewModel.PASSWORD_REQUIRED -> stringResource(R.string.welcome_password_required)
+        else -> error
+    }
     Surface(
         modifier = modifier
-            .widthIn(max = 720.dp)
+            .widthIn(max = 480.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         colors = SurfaceDefaults.colors(containerColor = AppColors.Surface.copy(alpha = 0.9f))
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 40.dp, vertical = 34.dp),
+            modifier = Modifier
+                .padding(horizontal = 40.dp, vertical = 34.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             StatusPill(
-                label = stringResource(R.string.app_name),
+                label = stringResource(R.string.welcome_brand_title),
                 containerColor = AppColors.BrandMuted
             )
-            Text(
-                text = stringResource(R.string.welcome_tagline),
-                style = MaterialTheme.typography.headlineMedium,
-                color = AppColors.TextPrimary,
-                textAlign = TextAlign.Center
+            OutlinedTextField(
+                value = username,
+                onValueChange = viewModel::setUsername,
+                label = { Text(stringResource(R.string.welcome_username_hint)) },
+                singleLine = true,
+                enabled = !isLoading,
+                textStyle = androidx.compose.ui.text.TextStyle(color = AppColors.TextPrimary),
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = AppColors.TextPrimary,
+                    unfocusedTextColor = AppColors.TextPrimary,
+                    disabledTextColor = AppColors.TextSecondary,
+                    focusedBorderColor = AppColors.Brand,
+                    unfocusedBorderColor = AppColors.TextSecondary.copy(alpha = 0.45f),
+                    focusedLabelColor = AppColors.Brand,
+                    unfocusedLabelColor = AppColors.TextSecondary,
+                    cursorColor = AppColors.Brand
+                ),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
-            Text(
-                text = stringResource(R.string.welcome_subtitle),
-                style = MaterialTheme.typography.bodyLarge,
-                color = AppColors.TextSecondary,
-                textAlign = TextAlign.Center
+            OutlinedTextField(
+                value = password,
+                onValueChange = viewModel::setPassword,
+                label = { Text(stringResource(R.string.welcome_password_hint)) },
+                singleLine = true,
+                enabled = !isLoading,
+                // No PasswordVisualTransformation on purpose: single-tenant reseller, customers
+                // paste the cred they got from support. See docs/skill/simplify-welcome-onboarding.md.
+                textStyle = androidx.compose.ui.text.TextStyle(color = AppColors.TextPrimary),
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = AppColors.TextPrimary,
+                    unfocusedTextColor = AppColors.TextPrimary,
+                    disabledTextColor = AppColors.TextSecondary,
+                    focusedBorderColor = AppColors.Brand,
+                    unfocusedBorderColor = AppColors.TextSecondary.copy(alpha = 0.45f),
+                    focusedLabelColor = AppColors.Brand,
+                    unfocusedLabelColor = AppColors.TextSecondary,
+                    cursorColor = AppColors.Brand
+                ),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Done
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalAlignment = Alignment.CenterVertically
+            if (!errorText.isNullOrBlank()) {
+                Text(
+                    text = errorText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.Live,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            TvButton(
+                onClick = viewModel::loginXtream,
+                enabled = !isLoading,
+                colors = androidx.tv.material3.ButtonDefaults.colors(
+                    containerColor = AppColors.Brand,
+                    contentColor = Color.White,
+                    focusedContainerColor = AppColors.BrandStrong,
+                    focusedContentColor = Color.White,
+                    pressedContainerColor = AppColors.BrandStrong,
+                    pressedContentColor = Color.White,
+                    disabledContainerColor = AppColors.BrandMuted,
+                    disabledContentColor = Color.White.copy(alpha = 0.6f)
+                ),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                TvButton(
-                    onClick = onNavigateToSetup,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(text = stringResource(R.string.welcome_setup_provider))
-                }
-                TvButton(
-                    onClick = onNavigateToHome,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.colors(
-                        containerColor = AppColors.SurfaceElevated,
-                        focusedContainerColor = Color.White,
-                        contentColor = AppColors.TextPrimary
-                    )
-                ) {
-                    Text(text = stringResource(R.string.welcome_setup_later))
-                }
+                Text(
+                    text = stringResource(R.string.welcome_save),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     }

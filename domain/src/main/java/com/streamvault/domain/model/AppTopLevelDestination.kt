@@ -16,15 +16,13 @@ enum class AppTopLevelDestination(
     SETTINGS("settings", AppLandingDestination.SETTINGS, isRequired = true);
 
     companion object {
+        // Eh! IPTV default: only the 5 tabs the reseller exposes, in this order.
+        // Settings → Navegação superior still lets the operator reorder/hide.
         val defaultOrder: List<AppTopLevelDestination> = listOf(
-            HOME,
+            SEARCH,
             LIVE_TV,
             MOVIES,
             SERIES,
-            DOWNLOADS,
-            GUIDE,
-            SEARCH,
-            PLUGINS,
             SETTINGS
         )
 

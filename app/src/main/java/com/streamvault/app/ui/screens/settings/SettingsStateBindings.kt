@@ -46,7 +46,7 @@ internal fun observeSettingsPreferenceSnapshot(
             parentalControlLevel = level,
             hasParentalPin = hasParentalPin,
             appLanguage = "system",
-            appLandingDestination = AppLandingDestination.HOME,
+            appLandingDestination = AppLandingDestination.LIVE_TV,
             appTopLevelDestinations = AppTopLevelDestination.defaultOrder,
             appHomeDashboardShelves = AppHomeDashboardShelf.defaultOrder,
             appTimeFormat = AppTimeFormat.SYSTEM,
